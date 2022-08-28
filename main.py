@@ -1,22 +1,24 @@
-import pandas
+import pandas as pd
 import easygui
+import openpyxl as op
+
 
 
 #easygui requests a file select for the main data frame.  Easygui returns the path of the file
 #from io import StringIO
 #raw_file_path = easygui.fileopenbox(msg="Select the raw data file.  Don't use the original!")
 #file = StringIO(raw_file_path)
-#df = pandas.read_excel(raw_file_path)
-df = pandas.read_excel(r"C:\test\testrawdata.xlsx")
+#df = pd.read_excel(raw_file_path)
+df = pd.read_excel(r"C:\test\testrawdata.xlsx")
 
 # these are from the Adobe Lead Import Template Worldwide tabs and are used to compare against
 #from io import StringIO
 #raw_file_path1 = easygui.fileopenbox(msg="Select the template data file.  Don't use the original!")
 #file = StringIO(raw_file_path1)
-#df_acceptable = pandas.read_excel(raw_file_path1, sheet_name="Acceptable List of Values")
-#df_states = pandas.read_excel(raw_file_path1, sheet_name="Territory State List")
-df_acceptable = pandas.read_excel(r'C:\test\Lead Import Template Worldwide.xlsx', sheet_name="Acceptable List of Values")
-df_states = pandas.read_excel(r'C:\test\Lead Import Template Worldwide.xlsx', sheet_name="Territory State List")
+#df_acceptable = pd.read_excel(raw_file_path1, sheet_name="Acceptable List of Values")
+#df_states = pd.read_excel(raw_file_path1, sheet_name="Territory State List")
+df_acceptable = pd.read_excel(r'C:\test\Lead Import Template Worldwide.xlsx', sheet_name="Acceptable List of Values")
+df_states = pd.read_excel(r'C:\test\Lead Import Template Worldwide.xlsx', sheet_name="Territory State List")
 
 #check CID length for 18 characters
 df.loc[df['CID'].apply(len) == 18, 'CID_status'] = 'TRUE'
@@ -24,7 +26,7 @@ df.loc[df['CID'].apply(len) != 18, 'CID_status'] = 'FALSE'
 
 
 #permissions date cleanup
-df["Permissions Create Date"] = pandas.to_datetime(df["Permissions Create Date"]).dt.strftime("%m%d%Y")
+df["Permissions Create Date"] = pd.to_datetime(df["Permissions Create Date"]).dt.strftime("%m%d%Y")
 
 #check if email address is in a standard format
 from validate_email import validate_email
@@ -114,17 +116,16 @@ df.loc[df['Employee Range'] == '9-Jan', 'Employee Range'] = '1-9'
 boolvalue = df['Employee Range'].isin(df_acceptable['Employee Range'])
 df['Employee_Range_Good'] = boolvalue
 
-#check if required fields exist
-#placeholder
 
 #save df file to temp excel doc for openpyxl
 df.to_excel(r'C:\test\testrawdata_filtered_temp.xlsx', index=False)
 
+
 #find any columns with 'Field' in the name and create a df and drop if empty
-df_field = pandas.DataFrame()
+df_field = pd.DataFrame()
 df_field = df.filter(like='Field', axis=1)
 df_field.dropna(how='all', axis=1, inplace=True)
-pandas.concat([df, df_field], axis='columns')
+pd.concat([df, df_field], axis='columns')
 
 #openpyxl conditional formatting section
 from openpyxl import load_workbook
@@ -148,33 +149,49 @@ ws.conditional_formatting.add('AV2:BD400', rule)
 
 wb.save(r'C:\test\testrawdata_filtered.xlsx')
 
-#now lets copy the columns from raw to the template but I only know how to do it in pandas
-df_template = pandas.read_excel(r'c:\test\Lead Import Template Worldwide.xlsx', sheet_name="Template (File Format)")
-df_filtered = pandas.read_excel(r'c:\test\testrawdata_filtered.xlsx')
-df_new = pandas.DataFrame()
 
 
-df_new = df_template.copy()
-df_new['Campaign ID'] = df_filtered['CID'].copy()
-df_new['Permissions Create Date '] = df_filtered['Permissions Create Date'].copy()
-df_new['Email'] = df_filtered['Email'].copy()
-df_new['Zip'] = df_filtered['Zip'].copy()
-df_new['Country'] = df_filtered['Country'].copy()
-df_new['Phone'] = df_filtered['Phone'].copy()
-df_new['First Name'] = df_filtered['First Name'].copy()
-df_new['Last Name'] = df_filtered['Last Name'].copy()
-df_new['Company Name'] = df_filtered['Company Name'].copy()
-df_new['OPT IN EMAIL'] = df_filtered['OPT IN EMAIL'].copy()
-df_new['OPT IN MAIL'] = df_filtered['OPT IN MAIL'].copy()
-df_new['OPT IN PHONE'] = df_filtered['OPT IN PHONE'].copy()
-df_new['Product Interest'] = df_filtered['Product Interest'].copy()
-df_new['Industry'] = df_filtered['Industry'].copy()
-df_new = pandas.concat([df_new, df_field], axis=1)
+#open template workbook, delete all tabs except template sheet and save as new file
+from openpyxl import load_workbook, Workbook
 
-#print (df_template)
-df_new.to_excel(r'C:\test\testrawdata_final.xlsx', index=False)
+wb = load_workbook(r"C:\test\Lead Import Template Worldwide.xlsx")
+
+sheets = wb.sheetnames
+
+for s in sheets:
+    if s != 'Template (File Format)':
+        sheet_name = wb[s]
+        wb.remove(sheet_name)
+
+wb.save(r'c:\test\new.xlsx')
 
 
-#save file to excel format
-#df.to_excel(r'C:\test\testrawdata_filtered.xlsx', index=False)
-#print(df['Zip_status'])
+
+#now lets copy the columns from raw to the template
+
+wbt = op.load_workbook(r'c:\test\new.xlsx')
+wst = wbt['Template (File Format)']
+
+wbf = op.load_workbook(r'c:\test\testrawdata_filtered.xlsx')
+wsf = wbf['Sheet1']
+
+wb3 = op.load_workbook(r'c:\test\col_map.xlsx')
+ws3 = wb3['Sheet1']
+
+
+# get map column ids
+mr = ws3.max_row
+mc = ws3.max_column
+
+mr1 = wsf.max_row
+
+for x in range (2, mr + 1):
+    a = ws3.cell(row = x, column = 1).value
+    b = ws3.cell(row = x, column = 2).value
+    if a is None:
+        continue
+    for i in range (1, mr1 + 1):
+        c = wsf.cell(row = i, column = a)
+        wst.cell(row = i, column = b).value = c.value
+
+wbt.save(r'c:\test\final.xlsx')
