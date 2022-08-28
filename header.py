@@ -10,7 +10,11 @@ new_wb = Workbook()
 new_ws=new_wb['Sheet']
 new_ws.title ='Template (File Format)'
 
+#copy over column width
+for z, cd in original_sheet.column_dimensions.items():
+    new_ws.column_dimensions[z].width = cd.width
 
+#copy over all other formatting
 for row in original_sheet.rows:
     for cell in row:
         new_ws[cell.coordinate] = cell.value
@@ -23,5 +27,6 @@ for row in original_sheet.rows:
             new_cell.number_format = copy(cell.number_format)
             new_cell.protection = copy(cell.protection)
             new_cell.alignment = copy(cell.alignment)
+
 
 new_wb.save(r'c:\test\new.xlsx')
