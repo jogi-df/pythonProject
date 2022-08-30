@@ -1,15 +1,69 @@
 import pandas as pd
 import easygui
 import openpyxl as op
+import os
+
+def check_optional_col(colchk,colres,datasrc,datatemplate):          #this checks the required columns filtering out the blanks
+
+    #df = pd.read_excel(r"C:\test\testrawdata.xlsx")
+    #dfa = pd.read_excel(r'C:\test\Lead Import Template Worldwide.xlsx', sheet_name="Acceptable List of Values")
+
+    dftemp = datasrc[[colchk]].copy()
+
+    dftemp1 = dftemp.copy()
+    dftemp1.dropna(inplace = True)
+
+    dftempa = datatemplate[[colchk]].copy()
+    dftempa.dropna(inplace = True)
+    dftempa = dftempa.copy()
+
+    dftemp[colres] = dftemp1[colchk].isin(dftempa[colchk])
+    dftemp[colres].fillna("optional", inplace=True)
+
+    datasrc[colres] = dftemp[colres]
+
+    #df.to_excel(r'C:\test\working_copy.xlsx', index=False)
+
+def check_required_col(colchk,colres,datasrc,datatemplate):          #this checks the required columns filtering out the blanks
+
+    #df = pd.read_excel(r"C:\test\testrawdata.xlsx")
+    #dfa = pd.read_excel(r'C:\test\Lead Import Template Worldwide.xlsx', sheet_name="Acceptable List of Values")
+
+    dftemp = datasrc[[colchk]].copy()
+
+    dftemp1 = dftemp.copy()
+    dftemp1.dropna(inplace = True)
+
+    dftempa = datatemplate[[colchk]].copy()
+    dftempa.dropna(inplace = True)
+    dftempa = dftempa.copy()
+
+    dftemp[colres] = dftemp1[colchk].isin(dftempa[colchk])
+    dftemp[colres].fillna("required", inplace=True)
+
+    datasrc[colres] = dftemp[colres]
+
+    #df.to_excel(r'C:\test\working_copy.xlsx', index=False)
 
 
+def opt_in(df,name):                            #cleans up optin values
+    df.loc[df[name] == 'Yes', name] = 'Y'
+    df.loc[df[name] == 'No', name] = 'N'
+    df.loc[df[name].isnull(), name] = 'U'
+    return df
 
 #easygui requests a file select for the main data frame.  Easygui returns the path of the file
 #from io import StringIO
-#raw_file_path = easygui.fileopenbox(msg="Select the raw data file.  Don't use the original!")
-#file = StringIO(raw_file_path)
-#df = pd.read_excel(raw_file_path)
-df = pd.read_excel(r"C:\test\testrawdata.xlsx")
+#working_folder_path = easygui.fileopenbox(msg="Select the raw data file.  Don't use the original!")
+#file = StringIO(working_folder_path)
+
+
+#easygui requests a file select for the main data frame.  Easygui returns the path of the file
+from io import StringIO
+raw_file_path = easygui.fileopenbox(msg="Select the raw data file.  Don't use the original!")
+file = StringIO(raw_file_path)
+df = pd.read_excel(raw_file_path)
+#df = pd.read_excel(r"C:\test\testrawdata.xlsx")   #uncomment this for testing and comment out everything else
 
 # these are from the Adobe Lead Import Template Worldwide tabs and are used to compare against
 #from io import StringIO
@@ -17,8 +71,8 @@ df = pd.read_excel(r"C:\test\testrawdata.xlsx")
 #file = StringIO(raw_file_path1)
 #df_acceptable = pd.read_excel(raw_file_path1, sheet_name="Acceptable List of Values")
 #df_states = pd.read_excel(raw_file_path1, sheet_name="Territory State List")
-df_acceptable = pd.read_excel(r'C:\test\Lead Import Template Worldwide.xlsx', sheet_name="Acceptable List of Values")
-df_states = pd.read_excel(r'C:\test\Lead Import Template Worldwide.xlsx', sheet_name="Territory State List")
+df_acceptable = pd.read_excel(r'C:\test\Lead Import Template Worldwide.xlsx', sheet_name="Acceptable List of Values")          #uncomment this for testing and comment out everything else
+df_states = pd.read_excel(r'C:\test\Lead Import Template Worldwide.xlsx', sheet_name="Territory State List")                   #uncomment this for testing and comment out everything else
 
 #check CID length for 18 characters
 df.loc[df['CID'].apply(len) == 18, 'CID_status'] = 'TRUE'
@@ -27,6 +81,14 @@ df.loc[df['CID'].apply(len) != 18, 'CID_status'] = 'FALSE'
 
 #permissions date cleanup
 df["Permissions Create Date"] = pd.to_datetime(df["Permissions Create Date"]).dt.strftime("%m%d%Y")
+
+#Salutation format check
+check_optional_col('Salutation','Sal Good',df,df_acceptable)
+
+#first name check if empty
+#boolvalue = df['First Name'].notnull
+#df['Salutation_Good'] = boolvalue
+
 
 #check if email address is in a standard format
 from validate_email import validate_email
@@ -48,84 +110,64 @@ df.loc[df['Zip_length'] != 5, 'Zip_status'] = 'FALSE'
 
 df.loc[df['Country'] == "United States", 'Country'] = 'US'
 
-#check if state is 2 characters - probably don't need because it compares against the template list
-#df['State_length'] = df['State'].apply(len)
-#df.loc[df['State_length'] == 2, 'State_status'] = 'State Good'
-#df.loc[df['State_length'] != 2, 'State_status'] = 'Check State'
 
 #check if state abbreviation is in list (US only)
+#check_required_col('State','Prod Int',df,df_states)
 
 boolvalue = df['State'].isin(df_states['Abbreviation'])
 df['State_Abbr_Good'] = boolvalue
 
-#change OPT IN Email to Y N U
-df.loc[df['OPT IN EMAIL'] == 'Yes', 'OPT IN EMAIL'] = 'Y'
-df.loc[df['OPT IN EMAIL'] == 'No', 'OPT IN EMAIL'] = 'N'
-df.loc[df['OPT IN EMAIL'].isnull(), 'OPT IN EMAIL'] = 'U'
+#clean up the opt in responses
+opt_in(df,'OPT IN EMAIL')
+opt_in(df,'OPT IN MAIL')
+opt_in(df,'OPT IN PHONE')
+opt_in(df,'OPT IN THIRD PARTY')
 
-#change OPT IN mail to Y N U
-df.loc[df['OPT IN MAIL'] == 'Yes', 'OPT IN MAIL'] = 'Y'
-df.loc[df['OPT IN MAIL'] == 'No', 'OPT IN MAIL'] = 'N'
-df.loc[df['OPT IN MAIL'].isnull(), 'OPT IN MAIL'] = 'U'
 
-#change OPT IN phone to Y N U
-df.loc[df['OPT IN PHONE'] == 'Yes', 'OPT IN PHONE'] = 'Y'
-df.loc[df['OPT IN PHONE'] == 'No', 'OPT IN PHONE'] = 'N'
-df.loc[df['OPT IN PHONE'].isnull(), 'OPT IN PHONE'] = 'U'
-
-#change OPT IN THIRD PARTY to Y N U
-df.loc[df['OPT IN THIRD PARTY'] == 'Yes', 'OPT IN THIRD PARTY'] = 'Y'
-df.loc[df['OPT IN THIRD PARTY'] == 'No', 'OPT IN THIRD PARTY'] = 'N'
-df.loc[df['OPT IN THIRD PARTY'].isnull(), 'OPT IN THIRD PARTY'] = 'U'
 
 #check if product interest is spelled correctly
-boolvalue = df['Product Interest'].isin(df_acceptable['Product Interest'])
-df['Product_Good'] = boolvalue
+check_required_col('Product Interest','Prod Int',df,df_acceptable)
 
 #check if estimated number of units is formatted correctly
-#df.loc[df['Estimated Number of Units'].isnull(), 'Est # Units'] = ''
-#boolvalue = df['Estimated Number of Units'].isin(df_acceptable['Estimated Number of Units'])
-#df['Est # Units'] = boolvalue
-
-#df.loc[df['Estimated Number of Units'].notnull(), df['Est Units']] = df['Estimated Number of Units'].isin(df_acceptable['Estimated Number of Units'])
-#boolvalue1 = df['Estimated Number of Units'].isin(df_acceptable['Estimated Number of Units'])
-boolvalue1 = df['Estimated Number of Units'].isnull()
-#df['Est # Units1'].all = boolvalue1
+check_optional_col('Estimated Number of Units','Est Num Units',df,df_acceptable)
 
 
-#if df['Est # Units1'].all() == "True":
-#   df['Est # Units2'] = "blank"
-#df.loc[df['Est # Units1'] == 'TRUE', 'Est # Units1'] = 'blank'
 
-#check if industry is in list
-boolvalue = df['Industry'].isin(df_acceptable['Industry'])
-df['Industry_Good'] = boolvalue
+#check if industry is in list - required
+check_required_col('Industry','Industry_good',df,df_acceptable)
+#boolvalue = df['Industry'].isin(df_acceptable['Industry'])
+#df['Industry_Good'] = boolvalue
 
-#check if functional area is in list
-boolvalue = df['Functional Area/Department'].isin(df_acceptable['Functional Area/Department'])
-df['Industry_Good'] = boolvalue
+#check if functional area is in list - optional
+check_optional_col('Functional Area/Department','Funct Area',df,df_acceptable)
+#boolvalue = df['Functional Area/Department'].isin(df_acceptable['Functional Area/Department'])
+#df['Industry_Good'] = boolvalue
 
-#Job Function
-boolvalue = df['Job Function'].isin(df_acceptable['Job Function'])
-df['Job_Function_Good'] = boolvalue
+#Job Function - optional
+check_optional_col('Job Function','Job Funct',df,df_acceptable)
+#boolvalue = df['Job Function'].isin(df_acceptable['Job Function'])
+#df['Job_Function_Good'] = boolvalue
 
 # check employee range and fix if date is showing and then compare to acceptable values
 df.loc[df['Employee Range'] == 'Oct-99', 'Employee Range'] = '10-99'
 df.loc[df['Employee Range'] == '9-Jan', 'Employee Range'] = '1-9'
 
-boolvalue = df['Employee Range'].isin(df_acceptable['Employee Range'])
-df['Employee_Range_Good'] = boolvalue
+check_required_col('Employee Range','emp range good',df,df_acceptable)
+#boolvalue = df['Employee Range'].isin(df_acceptable['Employee Range'])
+#df['Employee_Range_Good'] = boolvalue
 
 
 #save df file to temp excel doc for openpyxl
-df.to_excel(r'C:\test\testrawdata_filtered_temp.xlsx', index=False)
+df.to_excel(r'C:\test\working_copy.xlsx', index=False)
 
 
-#find any columns with 'Field' in the name and create a df and drop if empty
-df_field = pd.DataFrame()
-df_field = df.filter(like='Field', axis=1)
+#make a copy of df and find any columns with 'Field' in the name and create a df and drop if empty
+#how to use this??
+df_field = df.copy()
+df_field = df_field.filter(like='Field', axis=1)
 df_field.dropna(how='all', axis=1, inplace=True)
-pd.concat([df, df_field], axis='columns')
+#df_field1 =pd.concat([df, df_field], axis='columns')
+#print(df_field)
 
 #openpyxl conditional formatting section
 from openpyxl import load_workbook
@@ -135,11 +177,11 @@ from openpyxl.formatting import Rule
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.formatting.rule import ColorScaleRule, CellIsRule, FormulaRule
 
-wb = load_workbook(r'C:\test\testrawdata_filtered_temp.xlsx')
+wb = load_workbook(r'C:\test\working_copy.xlsx')
 ws = wb.active
 
-for r in dataframe_to_rows(df, index=True, header=True):
-    ws.append(r)
+#for r in dataframe_to_rows(df, index=True, header=True):  #why is this in here???
+#    ws.append(r)
 
 red_fill = PatternFill(bgColor="FFC7CE")
 dxf = DifferentialStyle(fill=red_fill)
@@ -147,7 +189,7 @@ rule = Rule(type="containsText", operator="containsText", text="highlight", dxf=
 rule.formula = ['NOT(ISERROR(SEARCH("FALSE",AV2)))']
 ws.conditional_formatting.add('AV2:BD400', rule)
 
-wb.save(r'C:\test\testrawdata_filtered.xlsx')
+wb.save(r'C:\test\working_copy.xlsx')
 
 
 
@@ -172,7 +214,7 @@ wb.save(r'c:\test\new.xlsx')
 wbt = op.load_workbook(r'c:\test\new.xlsx')
 wst = wbt['Template (File Format)']
 
-wbf = op.load_workbook(r'c:\test\testrawdata_filtered.xlsx')
+wbf = op.load_workbook(r'c:\test\working_copy.xlsx')
 wsf = wbf['Sheet1']
 
 wb3 = op.load_workbook(r'c:\test\col_map.xlsx')
@@ -195,3 +237,9 @@ for x in range (2, mr + 1):
         wst.cell(row = i, column = b).value = c.value
 
 wbt.save(r'c:\test\final.xlsx')
+
+#clean up temporary template file
+if os.path.exists(r"c:\test\new.xlsx"):
+    os.remove(r"c:\test\new.xlsx")
+
+
