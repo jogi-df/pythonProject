@@ -2,55 +2,8 @@ import pandas as pd
 import easygui
 import openpyxl as op
 import os
-
-def check_optional_col(colchk,colres,datasrc,datatemplate):          #this checks the required columns filtering out the blanks
-
-    #df = pd.read_excel(r"C:\test\testrawdata.xlsx")
-    #dfa = pd.read_excel(r'C:\test\Lead Import Template Worldwide.xlsx', sheet_name="Acceptable List of Values")
-
-    dftemp = datasrc[[colchk]].copy()
-
-    dftemp1 = dftemp.copy()
-    dftemp1.dropna(inplace = True)
-
-    dftempa = datatemplate[[colchk]].copy()
-    dftempa.dropna(inplace = True)
-    dftempa = dftempa.copy()
-
-    dftemp[colres] = dftemp1[colchk].isin(dftempa[colchk])
-    dftemp[colres].fillna("optional", inplace=True)
-
-    datasrc[colres] = dftemp[colres]
-
-    #df.to_excel(r'C:\test\working_copy.xlsx', index=False)
-
-def check_required_col(colchk,colres,datasrc,datatemplate):          #this checks the required columns filtering out the blanks
-
-    #df = pd.read_excel(r"C:\test\testrawdata.xlsx")
-    #dfa = pd.read_excel(r'C:\test\Lead Import Template Worldwide.xlsx', sheet_name="Acceptable List of Values")
-
-    dftemp = datasrc[[colchk]].copy()
-
-    dftemp1 = dftemp.copy()
-    dftemp1.dropna(inplace = True)
-
-    dftempa = datatemplate[[colchk]].copy()
-    dftempa.dropna(inplace = True)
-    dftempa = dftempa.copy()
-
-    dftemp[colres] = dftemp1[colchk].isin(dftempa[colchk])
-    dftemp[colres].fillna("required", inplace=True)
-
-    datasrc[colres] = dftemp[colres]
-
-    #df.to_excel(r'C:\test\working_copy.xlsx', index=False)
-
-
-def opt_in(df,name):                            #cleans up optin values
-    df.loc[df[name] == 'Yes', name] = 'Y'
-    df.loc[df[name] == 'No', name] = 'N'
-    df.loc[df[name].isnull(), name] = 'U'
-    return df
+from functions import check_optional_col, check_required_col, opt_in
+from validate_email import validate_email
 
 #easygui requests a file select for the main data frame.  Easygui returns the path of the file
 #from io import StringIO
@@ -74,27 +27,34 @@ df = pd.read_excel(raw_file_path)
 df_acceptable = pd.read_excel(r'C:\test\Lead Import Template Worldwide.xlsx', sheet_name="Acceptable List of Values")          #uncomment this for testing and comment out everything else
 df_states = pd.read_excel(r'C:\test\Lead Import Template Worldwide.xlsx', sheet_name="Territory State List")                   #uncomment this for testing and comment out everything else
 
+
+
+
 #check CID length for 18 characters
 df.loc[df['CID'].apply(len) == 18, 'CID_status'] = 'TRUE'
 df.loc[df['CID'].apply(len) != 18, 'CID_status'] = 'FALSE'
 
-
 #permissions date cleanup
 df["Permissions Create Date"] = pd.to_datetime(df["Permissions Create Date"]).dt.strftime("%m%d%Y")
+
+#check if email address is in a standard format
+df['Email_Good'] = df['Email'].apply(validate_email)
 
 #Salutation format check
 check_optional_col('Salutation','Sal Good',df,df_acceptable)
 
 #first name check if empty
+df.loc[df['First Name'].isnull(), 'F Name'] = 'required'
+df.loc[df['First Name'].notnull(), 'F Name'] = 'TRUE'
 #boolvalue = df['First Name'].notnull
 #df['Salutation_Good'] = boolvalue
 
+#last name - exists
 
-#check if email address is in a standard format
-from validate_email import validate_email
-email_valid = df['Email'].apply(validate_email)
-df['Email_Good'] = email_valid
+#company - exists
 
+#check if state abbreviation is in list (US only)
+check_required_col('State','State Good',df,df_states,'Abbreviation')
 
 #check zip code length for 5 characters - pad to 5 with leading zero
 df['Zip'] = df['Zip'].astype(str)
@@ -105,57 +65,33 @@ df['Zip_length'] = zip_length.str.len()
 df.loc[df['Zip_length'] == 5, 'Zip_status'] = 'TRUE'
 df.loc[df['Zip_length'] != 5, 'Zip_status'] = 'FALSE'
 
-
-#if country is United States, replace with US
-
+#if country is United States, replace with US - required
 df.loc[df['Country'] == "United States", 'Country'] = 'US'
 
-
-#check if state abbreviation is in list (US only)
-#check_required_col('State','Prod Int',df,df_states)
-
-boolvalue = df['State'].isin(df_states['Abbreviation'])
-df['State_Abbr_Good'] = boolvalue
-
-#clean up the opt in responses
+#clean up the opt in responses - required
 opt_in(df,'OPT IN EMAIL')
 opt_in(df,'OPT IN MAIL')
 opt_in(df,'OPT IN PHONE')
 opt_in(df,'OPT IN THIRD PARTY')
 
+check_required_col('Product Interest','Prod Int',df,df_acceptable, 'Product Interest')
 
-
-#check if product interest is spelled correctly
-check_required_col('Product Interest','Prod Int',df,df_acceptable)
-
-#check if estimated number of units is formatted correctly
 check_optional_col('Estimated Number of Units','Est Num Units',df,df_acceptable)
 
+check_optional_col('Timeline for Purchasing','Timeline',df,df_acceptable)
 
+check_required_col('Industry','Industry_good',df,df_acceptable, 'Industry')
 
-#check if industry is in list - required
-check_required_col('Industry','Industry_good',df,df_acceptable)
-#boolvalue = df['Industry'].isin(df_acceptable['Industry'])
-#df['Industry_Good'] = boolvalue
-
-#check if functional area is in list - optional
 check_optional_col('Functional Area/Department','Funct Area',df,df_acceptable)
-#boolvalue = df['Functional Area/Department'].isin(df_acceptable['Functional Area/Department'])
-#df['Industry_Good'] = boolvalue
 
-#Job Function - optional
 check_optional_col('Job Function','Job Funct',df,df_acceptable)
-#boolvalue = df['Job Function'].isin(df_acceptable['Job Function'])
-#df['Job_Function_Good'] = boolvalue
 
 # check employee range and fix if date is showing and then compare to acceptable values
 df.loc[df['Employee Range'] == 'Oct-99', 'Employee Range'] = '10-99'
 df.loc[df['Employee Range'] == '9-Jan', 'Employee Range'] = '1-9'
+check_required_col('Employee Range','emp range good',df,df_acceptable, 'Employee Range')
 
-check_required_col('Employee Range','emp range good',df,df_acceptable)
-#boolvalue = df['Employee Range'].isin(df_acceptable['Employee Range'])
-#df['Employee_Range_Good'] = boolvalue
-
+check_optional_col('Revenue Range','Revenue Rg',df,df_acceptable)
 
 #save df file to temp excel doc for openpyxl
 df.to_excel(r'C:\test\working_copy.xlsx', index=False)
@@ -187,8 +123,10 @@ red_fill = PatternFill(bgColor="FFC7CE")
 dxf = DifferentialStyle(fill=red_fill)
 rule = Rule(type="containsText", operator="containsText", text="highlight", dxf=dxf)
 rule.formula = ['NOT(ISERROR(SEARCH("FALSE",AV2)))']
-ws.conditional_formatting.add('AV2:BD400', rule)
-
+rule1 = Rule(type="containsText", operator="containsText", text="highlight", dxf=dxf)
+rule1.formula = ['NOT(ISERROR(SEARCH("required",AV2)))']
+ws.conditional_formatting.add('AV2:BT4000', rule)
+ws.conditional_formatting.add('AV2:BT4000', rule1)
 wb.save(r'C:\test\working_copy.xlsx')
 
 
