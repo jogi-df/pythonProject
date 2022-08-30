@@ -1,5 +1,6 @@
 
-def check_optional_col(colchk,colres,datasrc,datatemplate):          #this checks the required columns filtering out the blanks
+def check_optional_col(colchk,colres,datasrc,datatemplate):
+    #this checks the optional columns filtering out the blanks
 
     dftemp = datasrc[[colchk]].copy()
 
@@ -38,7 +39,8 @@ def check_required_col(colchk,colres,datasrc,datatemplate,colchk1):
 
 
 
-def opt_in(df,name):                            #cleans up optin values
+def opt_in(df,name):
+    #cleans up optin values
     df.loc[df[name] == 'Yes', name] = 'Y'
     df.loc[df[name] == 'No', name] = 'N'
     df.loc[df[name].isnull(), name] = 'U'
