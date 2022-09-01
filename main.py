@@ -2,8 +2,13 @@ import pandas as pd
 import easygui
 import openpyxl as op
 import os
-from functions import check_optional_col, check_required_col, opt_in
+from functions import check_optional_col, check_required_col, opt_in, check_exists
 from validate_email import validate_email
+from io import StringIO
+
+#reference files
+df_zip = pd.read_excel(r'C:\test\ZIP_Locale_Detail.xls')
+
 
 #easygui requests a file select for the main data frame.  Easygui returns the path of the file
 #from io import StringIO
@@ -12,7 +17,6 @@ from validate_email import validate_email
 
 
 #easygui requests a file select for the main data frame.  Easygui returns the path of the file
-from io import StringIO
 raw_file_path = easygui.fileopenbox(msg="Select the raw data file.  Don't use the original!")
 file = StringIO(raw_file_path)
 df = pd.read_excel(raw_file_path)
@@ -27,46 +31,51 @@ df = pd.read_excel(raw_file_path)
 df_acceptable = pd.read_excel(r'C:\test\Lead Import Template Worldwide.xlsx', sheet_name="Acceptable List of Values")          #uncomment this for testing and comment out everything else
 df_states = pd.read_excel(r'C:\test\Lead Import Template Worldwide.xlsx', sheet_name="Territory State List")                   #uncomment this for testing and comment out everything else
 
-
+print(df['Country'])
 
 
 #check CID length for 18 characters
-df.loc[df['CID'].apply(len) == 18, 'CID_status'] = 'TRUE'
-df.loc[df['CID'].apply(len) != 18, 'CID_status'] = 'FALSE'
+df.loc[df['Campaign ID'].apply(len) == 18, 'CID_status'] = 'TRUE'
+df.loc[df['Campaign ID'].apply(len) != 18, 'CID_status'] = 'FALSE'
 
 #permissions date cleanup
-df["Permissions Create Date"] = pd.to_datetime(df["Permissions Create Date"]).dt.strftime("%m%d%Y")
+df.loc[df['Permissions Create Date '].isnull(), 'Perm Date'] = 'required'
+
+#print(df['Permissions Create Date'])
+#if df["Permissions Create Date"].all().str.contains('/'):
+df["Permissions Create Date "] = pd.to_datetime(df["Permissions Create Date "]).dt.strftime("%m%d%Y")
+
+
+check_optional_col('Attended','Attend',df,df_acceptable)
+
 
 #check if email address is in a standard format
 df['Email_Good'] = df['Email'].apply(validate_email)
 
-#Salutation format check
 check_optional_col('Salutation','Sal Good',df,df_acceptable)
 
-#first name check if empty
-df.loc[df['First Name'].isnull(), 'F Name'] = 'required'
-df.loc[df['First Name'].notnull(), 'F Name'] = 'TRUE'
-#boolvalue = df['First Name'].notnull
-#df['Salutation_Good'] = boolvalue
+check_exists('First Name', 'F Name',df)
 
-#last name - exists
+check_exists('Last Name', 'L Name', df)
 
-#company - exists
+check_exists('Company Name', 'Comp Good', df)
 
-#check if state abbreviation is in list (US only)
 check_required_col('State','State Good',df,df_states,'Abbreviation')
 
 #check zip code length for 5 characters - pad to 5 with leading zero
 df['Zip'] = df['Zip'].astype(str)
 df['Zip'] = df['Zip'].str.zfill(5)
 
+#check_required_col('Zip','Zip Good',df,df_zip,'DELIVERY ZIPCODE')
+
 zip_length = df['Zip'].astype(str)
-df['Zip_length'] = zip_length.str.len()
-df.loc[df['Zip_length'] == 5, 'Zip_status'] = 'TRUE'
-df.loc[df['Zip_length'] != 5, 'Zip_status'] = 'FALSE'
+df['Zip_Length'] = zip_length.str.len()
+df.loc[df['Zip_Length'] == 5, 'Zip_status'] = 'TRUE'
+df.loc[df['Zip_Length'] != 5, 'Zip_status'] = 'FALSE'
 
 #if country is United States, replace with US - required
-df.loc[df['Country'] == "United States", 'Country'] = 'US'
+check_required_col('Country','Country Good',df,df_acceptable,'Country')
+#df.loc[df['Country'] == "United States", 'Country'] = 'US'
 
 #clean up the opt in responses - required
 opt_in(df,'OPT IN EMAIL')

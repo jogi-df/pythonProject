@@ -1,6 +1,14 @@
 
+
+
+
 def check_optional_col(colchk,colres,datasrc,datatemplate):
     #this checks the optional columns filtering out the blanks
+
+    if not colchk in datasrc.columns:
+        print(colchk + " column not in source")
+        return
+    datasrc.loc[datasrc[colchk].isnull(), colres] = 'required'
 
     dftemp = datasrc[[colchk]].copy()
 
@@ -45,3 +53,8 @@ def opt_in(df,name):
     df.loc[df[name] == 'No', name] = 'N'
     df.loc[df[name].isnull(), name] = 'U'
     return df
+
+
+def check_exists(colname, colresult,dataframe):
+    dataframe.loc[dataframe[colname].isnull(), colresult] = 'required'
+    dataframe.loc[dataframe[colname].notnull(), colresult] = 'TRUE'
