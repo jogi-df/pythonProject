@@ -31,8 +31,6 @@ df = pd.read_excel(raw_file_path)
 df_acceptable = pd.read_excel(r'C:\test\Lead Import Template Worldwide.xlsx', sheet_name="Acceptable List of Values")          #uncomment this for testing and comment out everything else
 df_states = pd.read_excel(r'C:\test\Lead Import Template Worldwide.xlsx', sheet_name="Territory State List")                   #uncomment this for testing and comment out everything else
 
-print(df['Country'])
-
 
 #check CID length for 18 characters
 df.loc[df['Campaign ID'].apply(len) == 18, 'CID_status'] = 'TRUE'
@@ -47,7 +45,6 @@ df["Permissions Create Date "] = pd.to_datetime(df["Permissions Create Date "]).
 
 
 check_optional_col('Attended','Attend',df,df_acceptable)
-
 
 #check if email address is in a standard format
 df['Email_Good'] = df['Email'].apply(validate_email)
@@ -82,8 +79,11 @@ opt_in(df,'OPT IN EMAIL')
 opt_in(df,'OPT IN MAIL')
 opt_in(df,'OPT IN PHONE')
 opt_in(df,'OPT IN THIRD PARTY')
+#df.loc[df['Country'] == "United States", 'Country'] = 'US'
 
 check_required_col('Product Interest','Prod Int',df,df_acceptable, 'Product Interest')
+
+check_optional_col('Additional Product Interest','Addl Prod Int',df,df_acceptable)
 
 check_optional_col('Estimated Number of Units','Est Num Units',df,df_acceptable)
 
@@ -96,11 +96,15 @@ check_optional_col('Functional Area/Department','Funct Area',df,df_acceptable)
 check_optional_col('Job Function','Job Funct',df,df_acceptable)
 
 # check employee range and fix if date is showing and then compare to acceptable values
-df.loc[df['Employee Range'] == 'Oct-99', 'Employee Range'] = '10-99'
-df.loc[df['Employee Range'] == '9-Jan', 'Employee Range'] = '1-9'
+#df.loc[df['Employee Range'] == 'Oct-99', 'Employee Range'] = '10-99'
+#df.loc[df['Employee Range'] == '9-Jan', 'Employee Range'] = '1-9'
 check_required_col('Employee Range','emp range good',df,df_acceptable, 'Employee Range')
 
 check_optional_col('Revenue Range','Revenue Rg',df,df_acceptable)
+
+check_optional_col('Budget Established','Bud Est',df,df_acceptable)
+
+check_optional_col('Request Follow-Up/Demo','Req FU',df,df_acceptable)
 
 #save df file to temp excel doc for openpyxl
 df.to_excel(r'C:\test\working_copy.xlsx', index=False)
