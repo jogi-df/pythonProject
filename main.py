@@ -60,11 +60,15 @@ check_exists('Company Name', 'Comp Good', df)
 check_required_col('State','State Good',df,df_states,'Abbreviation')
 
 #check zip code length for 5 characters - pad to 5 with leading zero
-#df['Zip'] = df['Zip'].astype(str)
+df['Zip'] = df['Zip'].astype(str)
 #df['Zip'] = df['Zip'].str.zfill(5)
 
 #check_required_col('Zip','Zip Good',df,df_zip,'DELIVERY ZIPCODE')
-df[df['Zip'].str.match("^[0-9]{5}(?:-[0-9]{4})?$") == True]
+
+if df[df['Zip'].str.match("^[0-9]{5}(?:-[0-9]{4})?$").any() == True]:
+    print("zip good")
+else:
+    print("zip bad")
 
 
 #If Regex.IsMatch(df['Zip'], "^[0-9]{5}(?:-[0-9]{4})?$") Then
