@@ -17,10 +17,10 @@ df_zip = pd.read_excel(r'C:\test\ZIP_Locale_Detail.xls')
 
 
 #easygui requests a file select for the main data frame.  Easygui returns the path of the file
-raw_file_path = easygui.fileopenbox(msg="Select the raw data file.  Don't use the original!")
-file = StringIO(raw_file_path)
-df = pd.read_excel(raw_file_path)
-#df = pd.read_excel(r"C:\test\testrawdata.xlsx")   #uncomment this for testing and comment out everything else
+#raw_file_path = easygui.fileopenbox(msg="Select the raw data file.  Don't use the original!")
+#file = StringIO(raw_file_path)
+#df = pd.read_excel(raw_file_path)
+df = pd.read_excel(r"C:\test\testrawdata.xlsx")   #uncomment this for testing and comment out everything else
 
 # these are from the Adobe Lead Import Template Worldwide tabs and are used to compare against
 #from io import StringIO
@@ -33,15 +33,15 @@ df_states = pd.read_excel(r'C:\test\Lead Import Template Worldwide.xlsx', sheet_
 
 
 #check CID length for 18 characters
-df.loc[df['Campaign ID'].apply(len) == 18, 'CID_status'] = 'TRUE'
-df.loc[df['Campaign ID'].apply(len) != 18, 'CID_status'] = 'FALSE'
+df.loc[df['CID'].apply(len) == 18, 'CID_status'] = 'TRUE'
+df.loc[df['CID'].apply(len) != 18, 'CID_status'] = 'FALSE'
 
 #permissions date cleanup
-df.loc[df['Permissions Create Date '].isnull(), 'Perm Date'] = 'required'
+df.loc[df['Permissions Create Date'].isnull(), 'Perm Date'] = 'required'
 
 #print(df['Permissions Create Date'])
 #if df["Permissions Create Date"].all().str.contains('/'):
-df["Permissions Create Date "] = pd.to_datetime(df["Permissions Create Date "]).dt.strftime("%m%d%Y")
+df["Permissions Create Date"] = pd.to_datetime(df["Permissions Create Date"]).dt.strftime("%m%d%Y")
 
 
 check_optional_col('Attended','Attend',df,df_acceptable)
@@ -59,39 +59,17 @@ check_exists('Company Name', 'Comp Good', df)
 
 check_required_col('State','State Good',df,df_states,'Abbreviation')
 
-#check zip code length for 5 characters - pad to 5 with leading zero
+#check zip code length for 5 characters or 5+4
 df['Zip'] = df['Zip'].astype(str)
-#df['Zip'] = df['Zip'].str.zfill(5)
+df['Zip Status'] = df['Zip'].str.match("^[0-9]{5}(?:-[0-9]{4})?$")
 
-#check_required_col('Zip','Zip Good',df,df_zip,'DELIVERY ZIPCODE')
-
-if df[df['Zip'].str.match("^[0-9]{5}(?:-[0-9]{4})?$").any() == True]:
-    print("zip good")
-else:
-    print("zip bad")
-
-
-#If Regex.IsMatch(df['Zip'], "^[0-9]{5}(?:-[0-9]{4})?$") Then
-#    Console.WriteLine("Valid ZIP code")
-#Else
-#    Console.WriteLine("Invalid ZIP code")
-#End If
-
-#zip_length = df['Zip'].astype(str)
-#df['Zip_Length'] = zip_length.str.len()
-#df.loc[df['Zip_Length'] == 5, 'Zip_status'] = 'TRUE'
-#df.loc[df['Zip_Length'] != 5, 'Zip_status'] = 'FALSE'
-
-#if country is United States, replace with US - required
 check_required_col('Country','Country Good',df,df_acceptable,'Country')
-#df.loc[df['Country'] == "United States", 'Country'] = 'US'
 
 #clean up the opt in responses - required
 opt_in(df,'OPT IN EMAIL')
 opt_in(df,'OPT IN MAIL')
 opt_in(df,'OPT IN PHONE')
 opt_in(df,'OPT IN THIRD PARTY')
-#df.loc[df['Country'] == "United States", 'Country'] = 'US'
 
 check_required_col('Product Interest','Prod Int',df,df_acceptable, 'Product Interest')
 
