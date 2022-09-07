@@ -1,5 +1,4 @@
-
-
+import numpy as np
 
 
 def check_optional_col(colchk,colres,datasrc,datatemplate):
@@ -70,6 +69,10 @@ def check_phone_col(colchk,colres,datasrc):
         print(colchk + " column not in source")
         return
 
+    datasrc[colchk] = datasrc[colchk].astype(str)
+    datasrc[colres] = datasrc[colchk].str.match("^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$")
+
+    datasrc[colchk] = datasrc[colchk].replace('nan', np.nan)
     datasrc.loc[datasrc[colchk].isnull(), colres] = 'set OIP N'
 
 

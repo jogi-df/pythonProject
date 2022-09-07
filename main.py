@@ -1,10 +1,12 @@
 import pandas as pd
 import easygui
 import openpyxl as op
+import numpy as np
 import os
 from functions import check_optional_col, check_required_col, opt_in, check_exists, check_phone_col
 from validate_email import validate_email
 from io import StringIO
+import phonenumbers
 
 #reference files
 df_zip = pd.read_excel(r'C:\test\ZIP_Locale_Detail.xls')
@@ -33,7 +35,6 @@ df_states = pd.read_excel(r'C:\test\Lead Import Template Worldwide.xlsx', sheet_
 
 #remove any trailing whitespaces in the column names (shows up in permissions create date)
 df.columns = df.columns.str.rstrip()
-
 
 #sometimes raw data comes in on the template where Campaign ID is the CID column.  Lets normalize the name.
 if 'Campaign ID' in df.columns:
