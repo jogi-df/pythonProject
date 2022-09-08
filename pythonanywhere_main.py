@@ -24,9 +24,14 @@ app.secret_key = '34534lkj523l4kj;l342gf-'
 
 @app.route('/')
 def index():
+    return render_template('menu.html')
+
+
+@app.route('/input')
+def index1():
     return render_template('index_upload_and_show_data.html')
 
-@app.route('/',  methods=("POST", "GET"))
+@app.route('/input',  methods=("POST", "GET"))
 def uploadFile():
     if request.method == 'POST':
         # upload file flask - first file should be the template, second is the file to be analyzed
@@ -156,11 +161,13 @@ def showData():
 
     red_fill = PatternFill(bgColor="FFC7CE")
     dxf = DifferentialStyle(fill=red_fill)
+    yellow_fill = PatternFill(bgColor="FFFF00")
+    dxy = DifferentialStyle(fill=yellow_fill)
     rule = Rule(type="containsText", operator="containsText", text="highlight", dxf=dxf)
     rule.formula = ['NOT(ISERROR(SEARCH("FALSE",AP2)))']
     rule1 = Rule(type="containsText", operator="containsText", text="highlight", dxf=dxf)
     rule1.formula = ['NOT(ISERROR(SEARCH("required",AP2)))']
-    rule2 = Rule(type="containsText", operator="containsText", text="highlight", dxf=dxf)
+    rule2 = Rule(type="containsText", operator="containsText", text="highlight", dxf=dxy)
     rule2.formula = ['NOT(ISERROR(SEARCH("set OIP N",AP2)))']
     ws.conditional_formatting.add('AP2:BT4000', rule)
     ws.conditional_formatting.add('AP2:BT4000', rule1)
@@ -172,11 +179,89 @@ def showData():
 
     filename ="/home/jogidf/mysite/static/uploads/working_copy.xlsx"
 
-    return send_file(filename, as_attachment=True)
+    issues = (df == False).sum().sum()
+    issues = issues + (df == 'required').sum().sum()
+    warnings = (df == 'set OIP N').sum().sum()
+
+    return render_template('result.html', issues=issues, warnings=warnings)
+
+    #return send_file(filename, as_attachment=True)
+
+    #return render_template('fix_file.html')
 
     # pandas dataframe to html table flask
-    uploaded_df_html = uploaded_df.to_html()
-    return render_template('show_csv_data.html', data_var = uploaded_df_html)
+    #uploaded_df_html = uploaded_df.to_html()
+    #return render_template('show_csv_data.html', data_var = uploaded_df_html)
+
+@app.route('/fix')
+def fix():
+    return render_template('fix_file.html')
+    #return render_template('index_upload_and_show_data.html')
+
+@app.route('/fix',  methods=("POST", "GET"))
+def uploadFix():
+    if request.method == 'POST':
+        # upload file flask - first file should be the template, second is the file to be analyzed
+        uploaded_fix = request.files['fixfile1']
+
+        # Extracting uploaded data file name
+        data_filename3 = secure_filename(uploaded_fix.filename)
+
+        # flask upload file to database (defined uploaded folder in static path)
+        uploaded_fix.save(os.path.join(app.config['UPLOAD_FOLDER'], data_filename3))
+
+        # Storing uploaded file path in flask session
+        session['uploaded_data_file_path3'] = os.path.join(app.config['UPLOAD_FOLDER'], data_filename3)
+
+        # store checkbox values
+        session['checkbox1'] = request.form.get('pmdate')
+        session['checkbox2'] = request.form.get('zcode')
+        session['checkbox3'] = request.form.get('optin')
+        session['checkbox4'] = request.form.get('optinu')
+        session['checkbox5'] = request.form.get('emprange')
+        session['checkbox6'] = request.form.get('final')
+
+        return render_template('fix_file2.html')
+
+@app.route('/results')
+def results():
+    data_file_path3 = session.get('uploaded_data_file_path3', None)
+    cb1 = session.get('checkbox1', None)
+    cb2 = session.get('checkbox2', None)
+    cb3 = session.get('checkbox3', None)
+    cb4 = session.get('checkbox4', None)
+    cb5 = session.get('checkbox5', None)
+    cb6 = session.get('checkbox6', None)
+
+    # read csv file in python flask (reading uploaded csv file from uploaded server location)
+    uploaded_df3 = pd.read_excel(data_file_path3, engine='openpyxl')
+
+
+    #set new dataframes to pass to the check section
+    dfr = uploaded_df3
+
+    if cb1 == 'on':
+        dfr["Permissions Create Date"] = pd.to_datetime(dfr["Permissions Create Date"]).dt.strftime("%m%d%Y")
+
+    if cb2 == 'on':
+        dfr['Zip'] = dfr['Zip'].apply(lambda x : str(x).zfill(5))
+
+    if cb3 == 'on':
+        opt_in(dfr,'OPT IN EMAIL')
+        opt_in(dfr,'OPT IN MAIL')
+        opt_in(dfr,'OPT IN PHONE')
+        opt_in(dfr,'OPT IN THIRD PARTY')
+
+    if cb4 == 'on':
+        dfr.loc[dfr['Phone'].isnull(), 'OPT IN PHONE'] = 'N'
+
+    if cb5 == 'on':
+        dfr.loc[dfr['Employee Range'] == 'Oct-99', 'Employee Range'] = '10-99'
+        dfr.loc[dfr['Employee Range'] == '9-Jan', 'Employee Range'] = '1-9'
+
+    dfr.to_excel(UPLOAD_FOLDER +"/" + "working_copy.xlsx", index=False)
+    return render_template('temp.html', cb1=cb1)
+
 
 
 if __name__=='__main__':

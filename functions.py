@@ -50,6 +50,13 @@ def check_required_col(colchk,colres,datasrc,datatemplate,colchk1):
 
 
 
+def opt_in_check(df,name):
+    #cleans up optin values
+    df.loc[df[name] == 'Yes', name] = 'Y'
+    df.loc[df[name] == 'No', name] = 'N'
+    df.loc[df[name].isnull(), name] = 'U'
+    return df
+
 def opt_in(df,name):
     #cleans up optin values
     df.loc[df[name] == 'Yes', name] = 'Y'
