@@ -52,7 +52,7 @@ def check_required_col(colchk,colres,datasrc,datatemplate,colchk1):
 
 def opt_in_check(df,name):
     #cleans up optin values
-    df.loc[df[name] == 'Yes', name] = 'Y'
+    df.loc[df[name] == 'Yes', name + "_check"] = 'FALSE'
     df.loc[df[name] == 'No', name] = 'N'
     df.loc[df[name].isnull(), name] = 'U'
     return df
@@ -77,12 +77,25 @@ def check_phone_col(colchk,colres,datasrc):
         return
 
     datasrc[colchk] = datasrc[colchk].astype(str)
-    datasrc[colres] = datasrc[colchk].str.match("^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$")
+    datasrc[colres] = datasrc[colchk].str.match("^[+]?[1]?(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$")
 
     datasrc[colchk] = datasrc[colchk].replace('nan', np.nan)
     datasrc.loc[datasrc[colchk].isnull(), colres] = 'set OIP N'
 
 
+def whitespace_remover(dataframe):
+    # iterating over the columns
+    for i in dataframe.columns:
+
+        # checking datatype of each columns
+        if dataframe[i].dtype == 'object':
+
+            # applying strip function on column
+            dataframe[i] = dataframe[i].map(str.strip)
+        else:
+
+            # if condn. is False then it will do nothing.
+            pass
 
 #def zip_check(colchk,colres,datasrc):
 
