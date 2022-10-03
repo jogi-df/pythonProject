@@ -30,7 +30,7 @@ def check_optional_col(colchk,colres,datasrc,datatemplate):
 def check_required_col(colchk,colres,datasrc,datatemplate,colchk1):
 
     if not colchk in datasrc.columns:
-        print(colchk + " column not in source")
+        print(colchk + " column not in source and is REQUIRED")
         return
     #this removes blank rows from the raw data column and template column and compares them.  It fills in the blank rows with "required"
 
@@ -52,7 +52,7 @@ def check_required_col(colchk,colres,datasrc,datatemplate,colchk1):
 
 def opt_in_check(df,name):
     #cleans up optin values
-    df.loc[df[name] == 'Yes', name + "_check"] = 'FALSE'
+    df.loc[df[name] == 'Yes', name] = 'Y'
     df.loc[df[name] == 'No', name] = 'N'
     df.loc[df[name].isnull(), name] = 'U'
     return df

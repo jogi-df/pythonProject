@@ -45,60 +45,60 @@ df.columns = df.columns.str.rstrip()
 #if 'Zip Code' in df.columns:
 #    df.rename(columns = {"Zip Code":"Zip"}, inplace = True)
 
-df['CID'] = df.filter(like="Campaign")
+#inefficient column name check section--could probably loop this
 
-df['State'] = df.filter(like="State")
+if not 'CID' in df.columns:
+    df['CID'] = df.filter(like="Campaign")
+#else:
+#    print('CID' + " column not in source")
 
-df['Zip'] = df.filter(like="Zip")
+if not 'State' in df.columns:
+    df['State'] = df.filter(like="State")
+#else:
+#    print('State' + " column not in source")
 
-df['Email'] = df.filter(like="Email")
+if not 'Zip' in df.columns:
+    df['Zip'] = df.filter(like="Zip")
+#else:
+#    print('Zip' + " column not in source")
 
-df['Country'] = df.filter(like="Country")
+if not 'Email' in df.columns:
+    df['Email'] = df.filter(like="Email")
+#else:
+#    print('Email' + " column not in source")
 
-df['Company Name'] = df.filter(like="Company")
+if not 'Country' in df.columns:
+    df['Country'] = df.filter(like="Country")
+#else:
+#    print('Country' + " column not in source")
+
+if not 'Company Name' in df.columns:
+    df['Company Name'] = df.filter(like="Company")
+#else:
+#    print('Company Name' + " column not in source")
+
+if not 'Employee Range' in df.columns:
+    df['Employee Range'] = df.filter(like="Employee")
 
 
 #check CID length for 18 characters
 df.loc[df['CID'].apply(len) == 18, 'CID_status'] = 'TRUE'
 df.loc[df['CID'].apply(len) != 18, 'CID_status'] = 'FALSE'
 
+# date section ------------------------------------------------------------------------------
 
-#df['Perm Date'] = df['Permissions Create Date'].str.match("\'[0-9]{8}")
+
+
 
 df['Permissions Create Date'] = df['Permissions Create Date'].astype(str)
 
-#df['Permissions Create Date'] = df['Permissions Create Date'].str.zfill(8)
-
-print(df['Permissions Create Date'])
-
-#df.loc[df["Permissions Create Date"] != df["Permissions Create Date"].str.match("^[']?[0-1]?[1-9][1-3][1-9](202)[2-3]"), df["Permissions Create Date"]] = pd.to_datetime(df["Permissions Create Date"]).dt.strftime("%m%d%Y")
-
-#df.loc[df['Zip'].str.match("^[0-9]{4}") == True, 'Zip'] = df.loc['Zip'].str.zfill(5)
-
-df['perm'] = df["Permissions Create Date"].str.match("^[1-9][1-3][1-9](202)[2-3]")
-
-#print(df['perm'])
-
-df.loc[df["Permissions Create Date"].str.match("^[1-9][1-3][1-9](202)[2-3]") == 'True', 'Permissions Create Date'] = df['Permissions Create Date'].str.zfill(8)
-#df.loc[df[) == 'True', 'perm'] = df['Permissions Create Date'].str.zfill(8)
-
-print(df['Permissions Create Date'])
-
-#df.loc[df["Permissions Create Date"].str.match("^[1-9][1-3][1-9](202)[2-3]") == 'TRUE', 'perm'] = df['Permissions Create Date'].str.zfill(10)
-
-print(df['perm'])
+#if df.loc[df['Permissions Create Date'].len() > 10]
 
 #df["Permissions Create Date"] = pd.to_datetime(df["Permissions Create Date"]).dt.strftime("%m%d%Y")
 
+df['Permissions Create Date'] = df['Permissions Create Date'].str.zfill(8)
 
-
-
-#if not "Permissions Create Date" in df.columns:
-#    print(colchk + " column not in source")
-#        return
-#
-#    df["Permissions Create Date"] = df["Permissions Create Date"].astype(str)
-#    datasrc[colres] = datasrc[colchk].str.match("^[']?[0-1][0-9][1-3][1-9](202)[2-3]")
+df['perm'] = df["Permissions Create Date"].str.match("^[']?[0-1][1-9][1-3][0-9](202)[2-3]")
 
 
 
@@ -108,7 +108,8 @@ print(df['perm'])
 check_optional_col('Attended','Attend',df,df_acceptable)
 
 #check if email address is in a standard format
-df['Email_Good'] = df['Email'].apply(validate_email)
+df['Email_format'] = df['Email'].apply(validate_email)
+df['Email unique'] = ~df['Email'].duplicated(keep=False)
 
 check_optional_col('Salutation','Sal Good',df,df_acceptable)
 
@@ -122,7 +123,9 @@ check_required_col('State','State Good',df,df_states,'Abbreviation')
 
 #check zip code length for 5 characters or 5+4
 df['Zip'] = df['Zip'].astype(str)
-df['Zip Status'] = df['Zip'].str.match("^[0-9]{5}(?:-[0-9]{4})?$")
+
+df['Zip'] = df['Zip'].apply(lambda x : str(x).zfill(5))
+df['Zip Status'] = df['Zip'].str.match("^[']?[0-9]{5}(?:-[0-9]{4})?$")
 #df.loc[df['Zip'].str.match("^[0-9]{4}") == True, 'Zip'] = df.loc['Zip'].str.zfill(5)
 #[df['Zip'].str.match("^[0-9]{4}") == True, df['Zip']] = df['Zip'].str.zfill(5)
 
@@ -136,7 +139,7 @@ check_phone_col('Phone', 'Ph Status', df)
 #test fixes
 df.loc[df['Phone'].isnull(), 'OPT IN PHONE'] = 'N'
 
-df['Zip'] = df['Zip'].apply(lambda x : str(x).zfill(5))
+
 
 
 #df.loc[df['Employee Range'] == '10/1/1999', 'Employee Range'] = '\'10-99'
@@ -144,10 +147,10 @@ df['Zip'] = df['Zip'].apply(lambda x : str(x).zfill(5))
 
 
 #clean up the opt in responses - required - chnage this to check only
-opt_in_check(df,'OPT IN EMAIL')
-opt_in_check(df,'OPT IN MAIL')
-opt_in_check(df,'OPT IN PHONE')
-opt_in_check(df,'OPT IN THIRD PARTY')
+opt_in(df,'OPT IN EMAIL')
+opt_in(df,'OPT IN MAIL')
+opt_in(df,'OPT IN PHONE')
+opt_in(df,'OPT IN THIRD PARTY')
 
 check_required_col('Product Interest','Prod Int',df,df_acceptable, 'Product Interest')
 
@@ -177,7 +180,10 @@ issues = (df == False).sum().sum()
 issues = issues + (df == 'required').sum().sum()
 warnings = (df == 'set OIP N').sum().sum()
 
-print(issues)
+
+
+print("There are " + str(issues) + " issues.")
+print("There are " + str(warnings) + " warnings.")
 
 #save df file to temp excel doc for openpyxl
 df.to_excel(working_folder + "\working_copy.xlsx", index=False)
