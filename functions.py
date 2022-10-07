@@ -8,7 +8,7 @@ def check_optional_col(colchk,colres,datasrc,datatemplate):
         print(colchk + " column not in source")
         return
 
-    datasrc.loc[datasrc[colchk].isnull(), colres] = 'required'
+    datasrc.loc[datasrc[colchk].isnull(), colres] = 'optional'
 
     dftemp = datasrc[[colchk]].copy()
 
@@ -44,9 +44,10 @@ def check_required_col(colchk,colres,datasrc,datatemplate,colchk1):
     dftempa = dftempa.copy()
 
     dftemp[colres] = dftemp1[colchk].isin(dftempa[colchk1])
-    dftemp[colres].fillna("required", inplace=True)
+    dftemp[colres].fillna("required", inplace = True)
 
     datasrc[colres] = dftemp[colres]
+
 
 
 
@@ -77,10 +78,10 @@ def check_phone_col(colchk,colres,datasrc):
         return
 
     datasrc[colchk] = datasrc[colchk].astype(str)
-    datasrc[colres] = datasrc[colchk].str.match("^[+]?[1]?(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$")
-
+#    datasrc[colres] = datasrc[colchk].str.match("^[+]?[1]?(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$")
+    datasrc[colres] = datasrc[colchk].str.match("^[+]?[1]?[-| |.]?[(| ]?\d{3}[)]?[-| |.]?\d{3}[-| |.]?\d{4}")
     datasrc[colchk] = datasrc[colchk].replace('nan', np.nan)
-    datasrc.loc[datasrc[colchk].isnull(), colres] = 'set OIP N'
+#    datasrc.loc[datasrc[colchk].isnull(), colres] = 'set OIP N'
 
 
 def whitespace_remover(dataframe):

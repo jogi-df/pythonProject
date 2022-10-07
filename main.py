@@ -98,7 +98,7 @@ df['Permissions Create Date'] = df['Permissions Create Date'].astype(str)
 
 df['Permissions Create Date'] = df['Permissions Create Date'].str.zfill(8)
 
-df['perm'] = df["Permissions Create Date"].str.match("^[']?[0-1][1-9][1-3][0-9](202)[2-3]")
+df['perm'] = df["Permissions Create Date"].str.match("^[']?[0-1][1-9][0-3][0-9](202)[2-3]")
 
 
 
@@ -134,10 +134,33 @@ df['Zip Status'] = df['Zip'].str.match("^[']?[0-9]{5}(?:-[0-9]{4})?$")
 
 check_required_col('Country','Country Good',df,df_acceptable,'Country')
 
-check_phone_col('Phone', 'Ph Status', df)
+#check_phone_col('Phone', 'Ph Status', df)
 
+df['Phone'] = df['Phone'].astype(str)
+df['Phone'] = df['Phone'].replace('nan', np.nan)
+
+
+#if df['Phone'].notnull:
+#    df['Ph status'] = df['Phone'].str.match("^[+]?[1]?[-| |.]?[(| ]?\d{3}[)]?[-| |.]?\d{3}[-| |.]?\d{4}")
+#df.loc[df['Phone'].notnull(), 'Ph status'] = df['Phone'].str.match("^[+]?[1]?[-| |.]?[(| ]?\d{3}[)]?[-| |.]?\d{3}[-| |.]?\d{4}")
+
+df.loc[df['Phone'].isnull(), 'Ph status'] = 'optional'
+#df['Ph status'] = pd.np.where(df.Phone.isnull(), "optional")
+
+
+
+
+#    datasrc[colchk] = datasrc[colchk].astype(str)
+#    datasrc[colres] = datasrc[colchk].str.match("^[+]?[1]?(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$")
+#    datasrc[colres] = datasrc[colchk].str.match("^[+]?[1]?[-| |.]?[(| ]?\d{3}[)]?[-| |.]?\d{3}[-| |.]?\d{4}")
+#    datasrc[colchk] = datasrc[colchk].replace('nan', np.nan)
 #test fixes
 df.loc[df['Phone'].isnull(), 'OPT IN PHONE'] = 'N'
+
+
+#if df.loc[df['Phone'].isnull() and ['OPT IN PHONE']] != 'N':
+
+#df['OPT IN phone chk'] = np.where((df['Phone'].isnull()) and (df['OPT IN PHONE'] != 'N'), 'FALSE', 'TRUE')
 
 
 
@@ -175,15 +198,24 @@ check_optional_col('Budget Established','Bud Est',df,df_acceptable)
 
 check_optional_col('Request Follow-Up/Demo','Req FU',df,df_acceptable)
 
+
+#this looks for FALSE in the column and if it exists color the header red
+
+for column in df.columns:
+    if not df[column].all():
+        name = column + "-error"
+#        print(column + " has errors")
+#        print(name)
+        df = df.rename(columns= {column:name})
+
+
+#sum issues and warnings
 issues = (df == False).sum().sum()
-
 issues = issues + (df == 'required').sum().sum()
-warnings = (df == 'set OIP N').sum().sum()
-
-
+#warnings = (df == 'set OIP N').sum().sum()
 
 print("There are " + str(issues) + " issues.")
-print("There are " + str(warnings) + " warnings.")
+#print("There are " + str(warnings) + " warnings.")
 
 #save df file to temp excel doc for openpyxl
 df.to_excel(working_folder + "\working_copy.xlsx", index=False)
@@ -217,7 +249,12 @@ rule1 = Rule(type="containsText", operator="containsText", text="highlight", dxf
 rule1.formula = ['NOT(ISERROR(SEARCH("required",N2)))']
 rule2 = Rule(type="containsText", operator="containsText", text="highlight", dxf=dxy)
 rule2.formula = ['NOT(ISERROR(SEARCH("set OIP N",N2)))']
+rule3 = Rule(type="containsText", operator="containsText", text="highlight", dxf=dxf)
+rule3.formula = ['NOT(ISERROR(SEARCH("error",A1)))']
 ws.conditional_formatting.add('N2:BT4000', rule)
 ws.conditional_formatting.add('N2:BT4000', rule1)
 ws.conditional_formatting.add('N2:BT4000', rule2)
+ws.conditional_formatting.add('A1:BT1', rule3)
+
+
 wb.save(working_folder + "\working_copy.xlsx")
