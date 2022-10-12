@@ -52,6 +52,12 @@ if not 'CID' in df.columns:
 #else:
 #    print('CID' + " column not in source")
 
+if not 'First Name' in df.columns:
+    df['First Name'] = df.filter(like="First")
+
+if not 'Last Name' in df.columns:
+    df['Last Name'] = df.filter(like="Last")
+
 if not 'State' in df.columns:
     df['State'] = df.filter(like="State")
 #else:
@@ -98,7 +104,7 @@ df['Permissions Create Date'] = df['Permissions Create Date'].astype(str)
 
 df['Permissions Create Date'] = df['Permissions Create Date'].str.zfill(8)
 
-df['perm'] = df["Permissions Create Date"].str.match("^[']?[0-1][1-9][0-3][0-9](202)[2-3]")
+df['perm'] = df["Permissions Create Date"].str.match("^[']?[0-1][0-9][0-3][0-9](202)[2-3]")
 
 
 
@@ -121,11 +127,12 @@ check_exists('Company Name', 'Comp Good', df)
 
 check_required_col('State','State Good',df,df_states,'Abbreviation')
 
-#check zip code length for 5 characters or 5+4
+#check zip code length for 5 characters or 5+4 or Canadian zip
 df['Zip'] = df['Zip'].astype(str)
 
+
 df['Zip'] = df['Zip'].apply(lambda x : str(x).zfill(5))
-df['Zip Status'] = df['Zip'].str.match("^[']?[0-9]{5}(?:-[0-9]{4})?$")
+df['Zip Status'] = df['Zip'].str.match("^[']?[0-9]{5}(?:-[0-9]{4})?$|([ABCEGHJ-NPRSTVXY]\d[ABCEGHJ-NPRSTV-Z][ -]?\d[ABCEGHJ-NPRSTV-Z]\d)")
 #df.loc[df['Zip'].str.match("^[0-9]{4}") == True, 'Zip'] = df.loc['Zip'].str.zfill(5)
 #[df['Zip'].str.match("^[0-9]{4}") == True, df['Zip']] = df['Zip'].str.zfill(5)
 
@@ -141,7 +148,11 @@ df['Phone'] = df['Phone'].replace('nan', np.nan)
 
 
 #if df['Phone'].notnull:
-#    df['Ph status'] = df['Phone'].str.match("^[+]?[1]?[-| |.]?[(| ]?\d{3}[)]?[-| |.]?\d{3}[-| |.]?\d{4}")
+df['Phone'] = df['Phone'].str.replace('\D', '', regex=True)
+
+
+#df['Ph status'] = df['Phone'].str.match("^[+]?[1]?[-| |.]?[(| ]?\d{3}[)]?[-| |.]?\d{3}[-| |.]?\d{4}")
+df['Ph status'] = df['Phone'].str.match("^[1]?[0-9]{10}$")
 #df.loc[df['Phone'].notnull(), 'Ph status'] = df['Phone'].str.match("^[+]?[1]?[-| |.]?[(| ]?\d{3}[)]?[-| |.]?\d{3}[-| |.]?\d{4}")
 
 df.loc[df['Phone'].isnull(), 'Ph status'] = 'optional'
