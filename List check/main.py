@@ -87,6 +87,18 @@ if not 'Employee Range' in df.columns:
     df['Employee Range'] = df.filter(like="Employee")
 
 
+#replace these values explicitly
+#fix est number of units if wrong values
+df.loc[df['Timeline for Purchasing'] == '1 to 3 months', 'Timeline for Purchasing'] = '1-3 months'
+df.loc[df['Timeline for Purchasing'] == '4 to 6 months', 'Timeline for Purchasing'] = '4-6 months'
+df.loc[df['Timeline for Purchasing'] == '7 to 9 months', 'Timeline for Purchasing'] = '7-9 months'
+df.loc[df['Timeline for Purchasing'] == '10 to 12 months', 'Timeline for Purchasing'] = '10-12 months'
+
+
+
+
+
+
 #check CID length for 18 characters
 df.loc[df['CID'].apply(len) == 18, 'CID_status'] = 'TRUE'
 df.loc[df['CID'].apply(len) != 18, 'CID_status'] = 'FALSE'
@@ -100,7 +112,7 @@ df['Permissions Create Date'] = df['Permissions Create Date'].astype(str)
 
 #if df.loc[df['Permissions Create Date'].len() > 10]
 
-#df["Permissions Create Date"] = pd.to_datetime(df["Permissions Create Date"]).dt.strftime("%m%d%Y")
+df["Permissions Create Date"] = pd.to_datetime(df["Permissions Create Date"]).dt.strftime("%m%d%Y")
 
 df['Permissions Create Date'] = df['Permissions Create Date'].str.zfill(8)
 
@@ -159,14 +171,19 @@ df.loc[df['Phone'].isnull(), 'Ph status'] = 'optional'
 #df['Ph status'] = pd.np.where(df.Phone.isnull(), "optional")
 
 
-
-
-#    datasrc[colchk] = datasrc[colchk].astype(str)
-#    datasrc[colres] = datasrc[colchk].str.match("^[+]?[1]?(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$")
-#    datasrc[colres] = datasrc[colchk].str.match("^[+]?[1]?[-| |.]?[(| ]?\d{3}[)]?[-| |.]?\d{3}[-| |.]?\d{4}")
-#    datasrc[colchk] = datasrc[colchk].replace('nan', np.nan)
 #test fixes
 df.loc[df['Phone'].isnull(), 'OPT IN PHONE'] = 'N'
+
+#remove ext or x or any non number character from extension
+df['Extension'] = df['Extension'].str.replace('\D', '', regex=True)
+
+
+#add in Mobile Phone column if it doesn't exist
+if not 'Mobile Phone' in df.columns:
+    idx=df.columns.get_loc("OPT IN EMAIL")
+    idx = idx-1
+    df.insert(idx, "Mobile Phone", "")
+
 
 
 #if df.loc[df['Phone'].isnull() and ['OPT IN PHONE']] != 'N':
@@ -189,6 +206,8 @@ opt_in(df,'OPT IN THIRD PARTY')
 check_required_col('Product Interest','Prod Int',df,df_acceptable, 'Product Interest')
 
 check_optional_col('Additional Product Interest','Addl Prod Int',df,df_acceptable)
+
+
 
 check_optional_col('Estimated Number of Units','Est Num Units',df,df_acceptable)
 
