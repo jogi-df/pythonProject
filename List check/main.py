@@ -38,12 +38,7 @@ df.columns = df.columns.str.rstrip()
 
 #whitespace_remover(df)
 
-#sometimes raw data comes in on the template where Campaign ID is the CID column.  Lets normalize the name.
-#if 'Campaign ID' in df.columns:
-#    df.rename(columns = {"Campaign ID":"CID"}, inplace = True)
-
-#if 'Zip Code' in df.columns:
-#    df.rename(columns = {"Zip Code":"Zip"}, inplace = True)
+#print(df.columns)
 
 #inefficient column name check section--could probably loop this
 
@@ -94,9 +89,13 @@ df.loc[df['Timeline for Purchasing'] == '4 to 6 months', 'Timeline for Purchasin
 df.loc[df['Timeline for Purchasing'] == '7 to 9 months', 'Timeline for Purchasing'] = '7-9 months'
 df.loc[df['Timeline for Purchasing'] == '10 to 12 months', 'Timeline for Purchasing'] = '10-12 months'
 
+#df['Industry'].str.strip()
 
-
-
+#for col in df.columns:
+#    try:
+#        df[col] = df[col].str.strip()
+#    except AttributeError:
+#        pass
 
 
 #check CID length for 18 characters
@@ -112,7 +111,7 @@ df['Permissions Create Date'] = df['Permissions Create Date'].astype(str)
 
 #if df.loc[df['Permissions Create Date'].len() > 10]
 
-df["Permissions Create Date"] = pd.to_datetime(df["Permissions Create Date"]).dt.strftime("%m%d%Y")
+#df["Permissions Create Date"] = pd.to_datetime(df["Permissions Create Date"]).dt.strftime("%m%d%Y")
 
 df['Permissions Create Date'] = df['Permissions Create Date'].str.zfill(8)
 
@@ -161,7 +160,7 @@ df['Phone'] = df['Phone'].replace('nan', np.nan)
 
 #if df['Phone'].notnull:
 df['Phone'] = df['Phone'].str.replace('\D', '', regex=True)
-
+#df['Phone'] = df['Phone'].str.replace('0$', '', regex=True)
 
 #df['Ph status'] = df['Phone'].str.match("^[+]?[1]?[-| |.]?[(| ]?\d{3}[)]?[-| |.]?\d{3}[-| |.]?\d{4}")
 df['Ph status'] = df['Phone'].str.match("^[1]?[0-9]{10}$")
@@ -175,7 +174,8 @@ df.loc[df['Phone'].isnull(), 'Ph status'] = 'optional'
 df.loc[df['Phone'].isnull(), 'OPT IN PHONE'] = 'N'
 
 #remove ext or x or any non number character from extension
-df['Extension'] = df['Extension'].str.replace('\D', '', regex=True)
+#df['Extension'] = df['Extension'].astype(str)
+#df['Extension'] = df['Extension'].str.replace('\D', '')
 
 
 #add in Mobile Phone column if it doesn't exist
