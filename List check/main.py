@@ -162,7 +162,7 @@ df['Phone'] = df['Phone'].replace('nan', np.nan)
 df['Phone'] = df['Phone'].str.replace('\D', '', regex=True)
 
 df['Phone'].replace(to_replace="^[1]", value=r"", regex=True, inplace=True)
-df['Phone'] = df['Phone'].str.replace('0$', '', regex=True)
+#df['Phone'] = df['Phone'].str.replace('0$', '', regex=True)
 
 #df['Ph status'] = df['Phone'].str.match("^[+]?[1]?[-| |.]?[(| ]?\d{3}[)]?[-| |.]?\d{3}[-| |.]?\d{4}")
 df['Ph status'] = df['Phone'].str.match("^[1]?[0-9]{10}$")
