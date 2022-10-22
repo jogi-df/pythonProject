@@ -88,6 +88,8 @@ df.loc[df['Timeline for Purchasing'] == '1 to 3 months', 'Timeline for Purchasin
 df.loc[df['Timeline for Purchasing'] == '4 to 6 months', 'Timeline for Purchasing'] = '4-6 months'
 df.loc[df['Timeline for Purchasing'] == '7 to 9 months', 'Timeline for Purchasing'] = '7-9 months'
 df.loc[df['Timeline for Purchasing'] == '10 to 12 months', 'Timeline for Purchasing'] = '10-12 months'
+df.loc[df['Industry'] == 'Advertising ', 'Industry'] = 'Advertising'
+
 
 #df['Industry'].str.strip()
 
@@ -180,14 +182,6 @@ df.loc[df['Phone'].isnull(), 'OPT IN PHONE'] = 'N'
 #df['Extension'] = df['Extension'].str.replace('\D', '')
 
 
-#add in Mobile Phone column if it doesn't exist
-if not 'Mobile Phone' in df.columns:
-    idx=df.columns.get_loc("OPT IN EMAIL")
-    idx = idx-1
-    df.insert(idx, "Mobile Phone", "")
-
-
-
 #if df.loc[df['Phone'].isnull() and ['OPT IN PHONE']] != 'N':
 
 #df['OPT IN phone chk'] = np.where((df['Phone'].isnull()) and (df['OPT IN PHONE'] != 'N'), 'FALSE', 'TRUE')
@@ -239,6 +233,13 @@ for column in df.columns:
 #        print(column + " has errors")
 #        print(name)
         df = df.rename(columns= {column:name})
+
+
+#add in Mobile Phone column if it doesn't exist - add in here so it doesn't get flagged with error from above check
+if not 'Mobile Phone' in df.columns:
+    idx=df.columns.get_loc("OPT IN EMAIL")
+    idx = idx-1
+    df.insert(idx, "Mobile Phone", "")
 
 
 #sum issues and warnings

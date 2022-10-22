@@ -3,8 +3,8 @@ import requests
 import glob
 import pandas as pd
 import re
-
-
+from selenium import webdriver
+import time
 
 f = glob.glob(r"C:\Users\jogi\OneDrive - binary-tech.com\Consulting\DF 2022\QA check/*.msg")
 
@@ -72,6 +72,16 @@ t_id2 = tracking_id(earl2)
 print(t_id2)
 
 
+
+DRIVER = 'chromedriver'
+driver = webdriver.Chrome(DRIVER)
+#driver.get('https://creativecloud.adobe.com/cc/discover/article/the-unlock-karen-x-cheng-on-going-viral-and-optimizing-for-fun?context.guid=35179d0a-a924-4cd3-a7d2-46ab0bd186bc?trackingid=81G55VS7&mv=email&context.init=false')
+driver.get(earl2)
+#el = driver.find_element_by_tag_name('body')
+time.sleep(5)
+screenshot = driver.save_screenshot(r'c:\test\my_screenshot.png')
+#el.screenshot(r'C:\test\screenshot.png')
+driver.quit()
 
 
 
