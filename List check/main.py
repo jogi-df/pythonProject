@@ -42,41 +42,37 @@ df.columns = df.columns.str.rstrip()
 
 #inefficient column name check section--could probably loop this
 
-if not 'CID' in df.columns:
-    df['CID'] = df.filter(like="Campaign")
-#else:
-#    print('CID' + " column not in source")
+if not 'CID' in df.columns: #renames the column in place if it is close to the standard
+    x = [col for col in df.columns if "Campaign" in col]
+    y = x[0]
+    df.rename(columns={y:'CID'}, inplace=True)
 
 if not 'First Name' in df.columns:
-    df['First Name'] = df.filter(like="First")
+    x = [col for col in df.columns if "First" in col]
+    y = x[0]
+    df.rename(columns={y:'First Name'}, inplace=True)
 
 if not 'Last Name' in df.columns:
-    df['Last Name'] = df.filter(like="Last")
+    x = [col for col in df.columns if "Last" in col]
+    y = x[0]
+    df.rename(columns={y:'Last Name'}, inplace=True)
 
 if not 'State' in df.columns:
     df['State'] = df.filter(like="State")
-#else:
-#    print('State' + " column not in source")
 
 if not 'Zip' in df.columns:
     df['Zip'] = df.filter(like="Zip")
-#else:
-#    print('Zip' + " column not in source")
 
 if not 'Email' in df.columns:
     df['Email'] = df.filter(like="Email")
-#else:
-#    print('Email' + " column not in source")
 
 if not 'Country' in df.columns:
     df['Country'] = df.filter(like="Country")
-#else:
-#    print('Country' + " column not in source")
 
-if not 'Company Name' in df.columns:
-    df['Company Name'] = df.filter(like="Company")
-#else:
-#    print('Company Name' + " column not in source")
+if not 'Company' in df.columns:
+    x = [col for col in df.columns if "Company" in col]
+    y = x[0]
+    df.rename(columns={y:'Company Name'}, inplace=True)
 
 if not 'Employee Range' in df.columns:
     df['Employee Range'] = df.filter(like="Employee")
@@ -154,20 +150,16 @@ df['Zip Status'] = df['Zip'].str.match("^[']?[0-9]{5}(?:-[0-9]{4})?$|([ABCEGHJ-N
 
 check_required_col('Country','Country Good',df,df_acceptable,'Country')
 
-#check_phone_col('Phone', 'Ph Status', df)
-
 df['Phone'] = df['Phone'].astype(str)
 df['Phone'] = df['Phone'].replace('nan', np.nan)
 
-
-#if df['Phone'].notnull:
 df['Phone'] = df['Phone'].str.replace('\D', '', regex=True)
 
-df['Phone'].replace(to_replace="^[1]", value=r"", regex=True, inplace=True)
+df['Phone'].replace(to_replace="^[1]", value=r"", regex=True, inplace=True)  #remove the leading 1
 #df['Phone'] = df['Phone'].str.replace('0$', '', regex=True)
 
 #df['Ph status'] = df['Phone'].str.match("^[+]?[1]?[-| |.]?[(| ]?\d{3}[)]?[-| |.]?\d{3}[-| |.]?\d{4}")
-df['Ph status'] = df['Phone'].str.match("^[1]?[0-9]{10}$")
+df['Ph status'] = df['Phone'].str.match("[0-9]{10}$")
 #df.loc[df['Phone'].notnull(), 'Ph status'] = df['Phone'].str.match("^[+]?[1]?[-| |.]?[(| ]?\d{3}[)]?[-| |.]?\d{3}[-| |.]?\d{4}")
 
 df.loc[df['Phone'].isnull(), 'Ph status'] = 'optional'
@@ -287,7 +279,7 @@ rule3.formula = ['NOT(ISERROR(SEARCH("error",A1)))']
 ws.conditional_formatting.add('N2:BT4000', rule)
 ws.conditional_formatting.add('N2:BT4000', rule1)
 ws.conditional_formatting.add('N2:BT4000', rule2)
-ws.conditional_formatting.add('A1:BT1', rule3)
+ws.conditional_formatting.add('A1:DA1', rule3)
 
 
 wb.save(working_folder + "\working_copy.xlsx")
