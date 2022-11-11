@@ -112,8 +112,8 @@ df['perm'] = df["Permissions Create Date"].str.match("^[']?[0-1][0-9][0-3][0-9](
 check_optional_col('Attended','Attend',df,df_acceptable)
 
 #check if email address is in a standard format
-df['Email_format'] = df['Email'].apply(validate_email)
-#df['Email_format'] = df['Email'].apply(lambda x:validate_email(x))
+#df['Email_format'] = df['Email'].apply(validate_email)
+df['Email_format'] = df['Email'].apply(lambda x:validate_email(x, check_format=True, check_smtp=False, check_dns=False))
 df['Email unique'] = ~df['Email'].duplicated(keep=False)
 
 check_optional_col('Salutation','Sal Good',df,df_acceptable)
