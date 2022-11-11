@@ -38,95 +38,72 @@ df.columns = df.columns.str.rstrip()
 
 #whitespace_remover(df)
 
-#print(df.columns)
+
+#sometimes raw data comes in on the template where Campaign ID is the CID column.  Lets normalize the name.
+#if 'Campaign ID' in df.columns:
+#    df.rename(columns = {"Campaign ID":"CID"}, inplace = True)
+
+#if 'Zip Code' in df.columns:
+#    df.rename(columns = {"Zip Code":"Zip"}, inplace = True)
 
 #inefficient column name check section--could probably loop this
 
-if not 'Campaign ID' in df.columns:                                     #renames the column header if it is non standard
-    x = [col for col in df.columns if "Campaign" in col]
-    y = x[0]
-    df.rename(columns={y:'Campaign ID'}, inplace=True)
+if not 'CID' in df.columns:
+    df['CID'] = df.filter(like="Campaign")
+#else:
+#    print('CID' + " column not in source")
 
 if not 'First Name' in df.columns:
-    x = [col for col in df.columns if "First" in col]
-    y = x[0]
-    df.rename(columns={y:'First Name'}, inplace=True)
-
-if not 'Last Name' in df.columns:
-    x = [col for col in df.columns if "Last" in col]
-    y = x[0]
-    df.rename(columns={y:'Last Name'}, inplace=True)
+    df['First Name'] = df.filter(like="First")
 
 if not 'State' in df.columns:
     df['State'] = df.filter(like="State")
+#else:
+#    print('State' + " column not in source")
 
 if not 'Zip' in df.columns:
     df['Zip'] = df.filter(like="Zip")
+#else:
+#    print('Zip' + " column not in source")
 
 if not 'Email' in df.columns:
     df['Email'] = df.filter(like="Email")
+#else:
+#    print('Email' + " column not in source")
 
 if not 'Country' in df.columns:
     df['Country'] = df.filter(like="Country")
+#else:
+#    print('Country' + " column not in source")
 
-if not 'Company' in df.columns:
-    x = [col for col in df.columns if "Company" in col]
-    y = x[0]
-    df.rename(columns={y:'Company Name'}, inplace=True)
+if not 'Company Name' in df.columns:
+    df['Company Name'] = df.filter(like="Company")
+#else:
+#    print('Company Name' + " column not in source")
 
 if not 'Employee Range' in df.columns:
     df['Employee Range'] = df.filter(like="Employee")
 
 
-#replace these values explicitly
-#fix est number of units if wrong values
-df.loc[df['Timeline for Purchasing'] == '1 to 3 months', 'Timeline for Purchasing'] = '1-3 months'
-df.loc[df['Timeline for Purchasing'] == '4 to 6 months', 'Timeline for Purchasing'] = '4-6 months'
-df.loc[df['Timeline for Purchasing'] == '7 to 9 months', 'Timeline for Purchasing'] = '7-9 months'
-df.loc[df['Timeline for Purchasing'] == '10 to 12 months', 'Timeline for Purchasing'] = '10-12 months'
-df.loc[df['Timeline for Purchasing'] == '10 To 12 Months', 'Timeline for Purchasing'] = '10-12 months'
-df.loc[df['Industry'] == 'Advertising ', 'Industry'] = 'Advertising'
-
-#fix states
-#df['State'] = df['State'].map(df_states.drop_duplicates().set_index('supplier_id')['retailer_id'])
-
-
-
-#df['Industry'].str.strip()
-
-#for col in df.columns:
-#    try:
-#        df[col] = df[col].str.strip()
-#    except AttributeError:
-#        pass
-
-
 #check CID length for 18 characters
-df.loc[df['Campaign ID'].apply(len) == 18, 'CID_status'] = 'TRUE'
-df.loc[df['Campaign ID'].apply(len) != 18, 'CID_status'] = 'FALSE'
+df.loc[df['CID'].apply(len) == 18, 'CID_status'] = 'TRUE'
+df.loc[df['CID'].apply(len) != 18, 'CID_status'] = 'FALSE'
 
 # date section ------------------------------------------------------------------------------
 
 
-#print(df['Permissions Create Date'].dtypes)
 
-if df['Permissions Create Date'].dtypes != 'object':
-    df['Permissions Create Date'] = df['Permissions Create Date'].astype(str)
 
-#if df['Permissions Create Date'].len()  8:
-#df["Permissions Create Date"] = pd.to_datetime(df["Permissions Create Date"]).dt.strftime("%m%d%Y")
+df['Permissions Create Date'] = df['Permissions Create Date'].astype(str)
 
 #if df.loc[df['Permissions Create Date'].len() > 10]
-#if df.loc[(df['Permissions Create Date'].str.match("\/"))]:
-#    print("date is in the wrong format")
-    #df["Permissions Create Date"] = pd.to_datetime(df["Permissions Create Date"]).dt.strftime("%m%d%Y")
-#else:
-#    print("date does not have slashes")
+
+#df["Permissions Create Date"] = pd.to_datetime(df["Permissions Create Date"]).dt.strftime("%m%d%Y")
+
 df['Permissions Create Date'] = df['Permissions Create Date'].str.zfill(8)
 
 df['perm'] = df["Permissions Create Date"].str.match("^[']?[0-1][0-9][0-3][0-9](202)[2-3]")
 
-#print(df['Permissions Create Date'].dtypes)
 
 
 
@@ -136,29 +113,24 @@ check_optional_col('Attended','Attend',df,df_acceptable)
 
 #check if email address is in a standard format
 df['Email_format'] = df['Email'].apply(validate_email)
+#df['Email_format'] = df['Email'].apply(lambda x:validate_email(x))
 df['Email unique'] = ~df['Email'].duplicated(keep=False)
 
 check_optional_col('Salutation','Sal Good',df,df_acceptable)
 
-#check_exists('First Name', 'F Name',df)
-df['First Name'] = df['First Name'].replace(r"^ +| +$", r"", regex=True)
-df['F Name'] = df['First Name'].str.match("^[_A-z|(-|'|á|é|ñ|ó|è|Ô|ç)?]*((\s)*[_A-z])*$")
+check_exists('First Name', 'F Name',df)
 
-#check_exists('Last Name', 'L Name', df)
-df['Last Name'] = df['Last Name'].replace(r"^ +| +$", r"", regex=True)          #remove leading and trailing spaces
-df['L Name'] = df['Last Name'].str.match("^[_A-z|(-|'|á|ã|é|ñ|ó|è|ç|Ô)?]*((\s)*[_A-z]|(é|ñ|ó|è|ç|Ô)?)*$")
+check_exists('Last Name', 'L Name', df)
 
 check_exists('Company Name', 'Comp Good', df)
 
 check_required_col('State','State Good',df,df_states,'Abbreviation')
 
-
-#check zip code length for 5 characters or 5+4 or Canadian zip
+#check zip code length for 5 characters or 5+4
 df['Zip'] = df['Zip'].astype(str)
 
-
 df['Zip'] = df['Zip'].apply(lambda x : str(x).zfill(5))
-df['Zip Status'] = df['Zip'].str.match("^[']?[0-9]{5}(?:-[0-9]{4})?$|([ABCEGHJ-NPRSTVXY]\d[ABCEGHJ-NPRSTV-Z][ -]?\d[ABCEGHJ-NPRSTV-Z]\d)")
+df['Zip Status'] = df['Zip'].str.match("^[']?[0-9]{5}(?:-[0-9]{4})?$")
 #df.loc[df['Zip'].str.match("^[0-9]{4}") == True, 'Zip'] = df.loc['Zip'].str.zfill(5)
 #[df['Zip'].str.match("^[0-9]{4}") == True, df['Zip']] = df['Zip'].str.zfill(5)
 
@@ -167,25 +139,28 @@ df['Zip Status'] = df['Zip'].str.match("^[']?[0-9]{5}(?:-[0-9]{4})?$|([ABCEGHJ-N
 
 check_required_col('Country','Country Good',df,df_acceptable,'Country')
 
-#df['Ph status'] = pd.np.where(df.Phone.isnull(), "optional")
-if df['Phone'].dtypes != 'object':
-    df['Phone'] = df['Phone'].astype(str)
+#check_phone_col('Phone', 'Ph Status', df)
+
+df['Phone'] = df['Phone'].astype(str)
 df['Phone'] = df['Phone'].replace('nan', np.nan)
 
-df['Phone'] = df['Phone'].str.replace('\D', '', regex=True)
-df['Phone'].replace(to_replace="^[1]", value=r"", regex=True, inplace=True)  #remove the leading 1
-#df['Phone'] = df['Phone'].str.replace('0$', '', regex=True)  #if all entries have trailing zero uncomment this line
-df['Ph status'] = df['Phone'].str.match("[0-9]{10}$")
+
+#if df['Phone'].notnull:
+df['Ph status'] = df['Phone'].str.match("^[+]?[1]?[-| |.]?[(| ]?\d{3}[)]?[-| |.]?\d{3}[-| |.]?\d{4}")
+#df.loc[df['Phone'].notnull(), 'Ph status'] = df['Phone'].str.match("^[+]?[1]?[-| |.]?[(| ]?\d{3}[)]?[-| |.]?\d{3}[-| |.]?\d{4}")
+
 df.loc[df['Phone'].isnull(), 'Ph status'] = 'optional'
+#df['Ph status'] = pd.np.where(df.Phone.isnull(), "optional")
 
 
 
+
+#    datasrc[colchk] = datasrc[colchk].astype(str)
+#    datasrc[colres] = datasrc[colchk].str.match("^[+]?[1]?(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$")
+#    datasrc[colres] = datasrc[colchk].str.match("^[+]?[1]?[-| |.]?[(| ]?\d{3}[)]?[-| |.]?\d{3}[-| |.]?\d{4}")
+#    datasrc[colchk] = datasrc[colchk].replace('nan', np.nan)
 #test fixes
 df.loc[df['Phone'].isnull(), 'OPT IN PHONE'] = 'N'
-
-#remove ext or x or any non number character from extension
-#df['Extension'] = df['Extension'].astype(str)
-#df['Extension'] = df['Extension'].str.replace('\D', '')
 
 
 #if df.loc[df['Phone'].isnull() and ['OPT IN PHONE']] != 'N':
@@ -209,8 +184,6 @@ check_required_col('Product Interest','Prod Int',df,df_acceptable, 'Product Inte
 
 check_optional_col('Additional Product Interest','Addl Prod Int',df,df_acceptable)
 
-
-
 check_optional_col('Estimated Number of Units','Est Num Units',df,df_acceptable)
 
 check_optional_col('Timeline for Purchasing','Timeline',df,df_acceptable)
@@ -228,7 +201,6 @@ check_optional_col('Revenue Range','Revenue Rg',df,df_acceptable)
 
 check_optional_col('Budget Established','Bud Est',df,df_acceptable)
 
-df.loc[df['Request Follow-Up/Demo'] == 'YES', 'Request Follow-Up/Demo'] = 'Yes'
 check_optional_col('Request Follow-Up/Demo','Req FU',df,df_acceptable)
 
 
@@ -240,13 +212,6 @@ for column in df.columns:
 #        print(column + " has errors")
 #        print(name)
         df = df.rename(columns= {column:name})
-
-
-#add in Mobile Phone column if it doesn't exist - add in here so it doesn't get flagged with error from above check
-if not 'Mobile Phone' in df.columns:
-    idx=df.columns.get_loc("OPT IN EMAIL")
-    #idx = idx-1
-    df.insert(idx, "Mobile Phone", "")
 
 
 #sum issues and warnings
@@ -294,7 +259,7 @@ rule3.formula = ['NOT(ISERROR(SEARCH("error",A1)))']
 ws.conditional_formatting.add('N2:BT4000', rule)
 ws.conditional_formatting.add('N2:BT4000', rule1)
 ws.conditional_formatting.add('N2:BT4000', rule2)
-ws.conditional_formatting.add('A1:DA1', rule3)
+ws.conditional_formatting.add('A1:BT1', rule3)
 
 
 wb.save(working_folder + "\working_copy.xlsx")
