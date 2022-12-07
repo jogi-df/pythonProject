@@ -142,7 +142,7 @@ check_optional_col('Salutation','Sal Good',df,df_acceptable)
 
 #check_exists('First Name', 'F Name',df)
 df['First Name'] = df['First Name'].replace(r"^ +| +$", r"", regex=True)
-df['F Name'] = df['First Name'].str.match("^[_A-z|(-|'|á|é|ñ|ó|è|Ô|ç|í)?]*((\s)*[_A-z])*$")
+df['F Name'] = df['First Name'].str.match("^[_A-z|(-|'|á|á|é|ñ|ó|è|Ô|ç|í)?]*((\s)*[_A-z])*$")
 
 #check_exists('Last Name', 'L Name', df)
 df['Last Name'] = df['Last Name'].replace(r"^ +| +$", r"", regex=True)          #remove leading and trailing spaces
