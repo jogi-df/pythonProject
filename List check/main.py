@@ -142,10 +142,12 @@ check_optional_col('Salutation','Sal Good',df,df_acceptable)
 
 #check_exists('First Name', 'F Name',df)
 df['First Name'] = df['First Name'].replace(r"^ +| +$", r"", regex=True)
+df['First Name'] = df['First Name'].str.title()
 df['F Name'] = df['First Name'].str.match("^[_A-z|(-|'|á|á|é|ñ|ó|è|Ô|ç|í)?]*((\s)*[_A-z])*$")
 
 #check_exists('Last Name', 'L Name', df)
 df['Last Name'] = df['Last Name'].replace(r"^ +| +$", r"", regex=True)          #remove leading and trailing spaces
+df['Last Name'] = df['Last Name'].str.title()                                   #Capitalize first letter, lowercase rest
 df['L Name'] = df['Last Name'].str.match("^[_A-z|(-|'|á|ã|é|ñ|ó|è|ç|Ô|í)?]*((\s)*[_A-z]|(-|é|ñ|ó|è|ç|Ô|í)?)*$")
 
 check_exists('Company Name', 'Comp Good', df)
@@ -172,10 +174,10 @@ if df['Phone'].dtypes != 'object':
     df['Phone'] = df['Phone'].astype(str)
 df['Phone'] = df['Phone'].replace('nan', np.nan)
 
-df['Phone'] = df['Phone'].str.replace('\D', '', regex=True)
-df['Phone'].replace(to_replace="^[1]", value=r"", regex=True, inplace=True)  #remove the leading 1
+#df['Phone'] = df['Phone'].str.replace('\D', '', regex=True)
+#df['Phone'].replace(to_replace="^[1]", value=r"", regex=True, inplace=True)  #remove the leading 1
 #df['Phone'] = df['Phone'].str.replace('0$', '', regex=True)  #if all entries have trailing zero uncomment this line
-df['Ph status'] = df['Phone'].str.match("[0-9]{10}$")
+#df['Ph status'] = df['Phone'].str.match("[0-9]{10}$")
 df.loc[df['Phone'].isnull(), 'Ph status'] = 'optional'
 
 
