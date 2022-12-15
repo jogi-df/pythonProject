@@ -152,6 +152,8 @@ df['L Name'] = df['Last Name'].str.match("^[_A-z|(-|'|á|ã|é|ñ|ó|è|ç|Ô|í
 
 check_exists('Company Name', 'Comp Good', df)
 
+df['City'] = df['City'].str.title()                                   #Capitalize first letter, lowercase rest
+
 check_required_col('State','State Good',df,df_states,'Abbreviation')
 
 
