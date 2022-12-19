@@ -5,6 +5,7 @@ import pandas as pd
 import re
 from selenium import webdriver
 import time
+from bs4 import BeautifulSoup
 
 f = glob.glob(r"C:\Users\jogi\OneDrive - binary-tech.com\Consulting\DF 2022\QA check/*.msg")
 
@@ -16,7 +17,7 @@ for filename in f:
 #    msg_date = msg.date
 #    msg_subj = msg.subject
     msg_message = msg.body
-#    msg_html = msg.htmlBody
+#    msg_message = msg.htmlBody
 #    print('Sender: {}'.format(msg_sender))
     df1 = pd.DataFrame([x.split(';') for x in msg_message.split('\n')])
 #    df1 = pd.DataFrame([msg_message.split('\n')])
@@ -26,6 +27,13 @@ for filename in f:
 #    df1 = df1.replace(r" <", r"xx<", regex=True)
 #     df2['Email'] = df1['Email'].str.split('xx')
 
+
+for filename in f:
+    msg = extract_msg.Message(filename)
+    msg_message = msg.htmlBody
+    soup = BeautifulSoup(msg_message, "lxml")
+    for link in soup.find_all('a'):
+        print(link.get('href'))
 
 #    df1.set_index(['Email']).apply(lambda x: x.str.split('xx').explode()).reset_index()
 
@@ -79,7 +87,7 @@ driver = webdriver.Chrome(DRIVER)
 driver.get(earl2)
 #el = driver.find_element_by_tag_name('body')
 time.sleep(5)
-screenshot = driver.save_screenshot(r'c:\test\my_screenshot.png')
+screenshot = driver.save_screenshot(r'C:\Users\jogi\OneDrive - binary-tech.com\Consulting\DF 2022\QA check\my_screenshot.png')
 #el.screenshot(r'C:\test\screenshot.png')
 driver.quit()
 
