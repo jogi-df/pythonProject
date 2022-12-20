@@ -12,7 +12,7 @@ WINDOW_SIZE = "1920,1080"
 chrome_options = Options()
 chrome_options.add_argument("--headless")
 chrome_options.add_argument("--window-size=%s" % WINDOW_SIZE)
-
+driver = webdriver.Chrome(options=chrome_options)
 
 f = glob.glob(r"C:\Users\jogi\OneDrive - binary-tech.com\Consulting\DF 2022\QA check/*.msg")
 
@@ -59,28 +59,70 @@ for filename in f:
     msg_message = msg.htmlBody
     soup = BeautifulSoup(msg_message, "lxml")
     x = soup.find_all('a')
-#    print(x)
-
-
     for link in soup.find_all('a'):
-        matches = ["vcf", "jsp", "facebook", "instagram", "twitter", "youtube", "Subscription", "trademarks", "privacy", "unsubscribe", "emailWebview", "track", "policy"] # list of words for links to stop following
+        matches = ["vcf", "jsp", "/go/", "facebook", "instagram", "linkedin", "tiktok", "twitter", "youtube",
+                   "Subscription", "trademarks", "privacy",
+                   "unsubscribe", "emailWebview", "mktoTestLink", "policy"]  # list of words for links to stop following
+        matches1 = ["vcf", "jsp", "/go/", "facebook", "instagram", "linkedin", "tiktok", "twitter", "youtube",
+                    "Subscription", "trademarks", "privacy",
+                    "unsubscribe", "emailWebview", "mktoTestLink", "policy",
+                    "trackingid"]  # list of words for links to stop following
         url1 = link.get('href')
         if "http" in url1:
+            #            print("url1", url1) #this should be the original url wrapped by email client or spam filter
             url2 = follow_url(link.get('href'))
-            print("url2", url2)
+            print("url2", url2)  # possibly a marketo link or go url
             if not any(x in url2 for x in matches):
-                driver = webdriver.Chrome(options=chrome_options)
+                #                driver = webdriver.Chrome(options=chrome_options)
                 driver.get(url1)
                 u2 = driver.current_url
                 print("u2", u2)
-                driver.get(u2)
-                u3 = driver.current_url
-                print("u3", u3)
-                if not any(x in url2 for x in matches):
-                    driver.close()
-                    s_url1 = short_url(u3)
-                    t_id1 = tracking_id(u3)
+                if any(x in u2 for x in matches1):
+                    #                    driver.close()
+                    s_url1 = short_url(u2)
+                    t_id1 = tracking_id(u2)
                     print(t_id1)
+                else:
+                    driver.get(u2)
+                    u3 = driver.current_url
+                    print("u3", u3)
+                    if not any(x in u3 for x in matches):
+                        #                        driver.close()
+                        s_url1 = short_url(u3)
+                        t_id1 = tracking_id(u3)
+                        print(t_id1)
+
+
+
+# for link in soup.find_all('a'):
+        matches = ["vcf", "jsp", "/go/", "facebook", "instagram", "linkedin", "tiktok", "twitter", "youtube", "Subscription", "trademarks", "privacy",
+                   "unsubscribe", "emailWebview", "mktoTestLink", "policy"] # list of words for links to stop following
+        matches1 = ["vcf", "jsp", "/go/", "facebook", "instagram", "linkedin", "tiktok", "twitter", "youtube", "Subscription", "trademarks", "privacy",
+                   "unsubscribe", "emailWebview", "mktoTestLink", "policy", "trackingid"] # list of words for links to stop following
+        url1 = link.get('href')
+        if "http" in url1:
+#            print("url1", url1) #this should be the original url wrapped by email client or spam filter
+            url2 = follow_url(link.get('href'))
+            print("url2", url2) #possibly a marketo link or go url
+            if not any(x in url2 for x in matches):
+#                driver = webdriver.Chrome(options=chrome_options)
+                driver.get(url1)
+                u2 = driver.current_url
+                print("u2", u2)
+                if any(x in u2 for x in matches1):
+#                    driver.close()
+                    s_url1 = short_url(u2)
+                    t_id1 = tracking_id(u2)
+                    print(t_id1)
+                else:
+                    driver.get(u2)
+                    u3 = driver.current_url
+                    print("u3", u3)
+                    if not any(x in u3 for x in matches):
+#                        driver.close()
+                        s_url1 = short_url(u3)
+                        t_id1 = tracking_id(u3)
+                        print(t_id1)
 
 
 
