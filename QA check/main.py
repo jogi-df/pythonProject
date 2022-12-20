@@ -3,9 +3,16 @@ import requests
 import glob
 import pandas as pd
 import re
-from selenium import webdriver
 import time
 from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+
+WINDOW_SIZE = "1920,1080"
+chrome_options = Options()
+chrome_options.add_argument("--headless")
+chrome_options.add_argument("--window-size=%s" % WINDOW_SIZE)
+
 
 f = glob.glob(r"C:\Users\jogi\OneDrive - binary-tech.com\Consulting\DF 2022\QA check/*.msg")
 
@@ -20,7 +27,6 @@ def follow_url(url_wrapped):
 def tracking_id(unwrapped_url):
     if 'trackingid=' in unwrapped_url:
         trackid = re.search("trackingid=(.{8})", unwrapped_url)
-#        print(trackid.group(1))
         return trackid.group(1)
 
 
@@ -52,13 +58,37 @@ for filename in f:
     msg = extract_msg.Message(filename)
     msg_message = msg.htmlBody
     soup = BeautifulSoup(msg_message, "lxml")
+    x = soup.find_all('a')
+#    print(x)
+
+
     for link in soup.find_all('a'):
-        # print(link.get('href'))
-        url1 = follow_url(link.get('href'))
-        print(url1)
-        s_url1 = short_url(url1)
-        t_id1 = tracking_id(url1)
-        print(t_id1)
+        matches = ["vcf", "jsp", "facebook", "instagram", "twitter", "youtube", "Subscription", "trademarks", "privacy", "unsubscribe", "emailWebview", "track", "policy"] # list of words for links to stop following
+        url1 = link.get('href')
+        if "http" in url1:
+            url2 = follow_url(link.get('href'))
+            print("url2", url2)
+            if not any(x in url2 for x in matches):
+                driver = webdriver.Chrome(options=chrome_options)
+                driver.get(url1)
+                u2 = driver.current_url
+                print("u2", u2)
+                driver.get(u2)
+                u3 = driver.current_url
+                print("u3", u3)
+                if not any(x in url2 for x in matches):
+                    driver.close()
+                    s_url1 = short_url(u3)
+                    t_id1 = tracking_id(u3)
+                    print(t_id1)
+
+
+
+
+
+
+
+
 
 #    df1.set_index(['Email']).apply(lambda x: x.str.split('xx').explode()).reset_index()
 
@@ -90,13 +120,13 @@ for filename in f:
 # t_id2 = tracking_id(earl2)
 # print(t_id2)
 
-DRIVER = 'chromedriver'
-driver = webdriver.Chrome(DRIVER)
-driver.get(earl2)
-# el = driver.find_element_by_tag_name('body')
-time.sleep(5)
-screenshot = driver.save_screenshot(r'C:\Users\jogi\OneDrive - binary-tech.com\Consulting\DF 2022\QA check\my_screenshot.png')
-driver.quit()
+#DRIVER = 'chromedriver'
+#driver = webdriver.Chrome(DRIVER)
+#driver.get(earl2)
+
+#time.sleep(5)
+#screenshot = driver.save_screenshot(r'C:\Users\jogi\OneDrive - binary-tech.com\Consulting\DF 2022\QA check\my_screenshot.png')
+#driver.quit()
 
 
 df1.to_excel(r"C:\Users\jogi\OneDrive - binary-tech.com\Consulting\DF 2022\QA check\working_copy.xlsx", index=False)
