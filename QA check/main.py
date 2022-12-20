@@ -39,19 +39,19 @@ def short_url(long_url):    #removes marketo tracking in url
     print(b[0])
 
 
-for filename in f:
-    msg = extract_msg.Message(filename)
+###for filename in f:
+###    msg = extract_msg.Message(filename)
 #    msg_sender = msg.sender
 #    msg_date = msg.date
 #    msg_subj = msg.subject
-    msg_message = msg.body
+###    msg_message = msg.body
 #    msg_message = msg.htmlBody
 #    print('Sender: {}'.format(msg_sender))
-    df1 = pd.DataFrame([x.split(';') for x in msg_message.split('\n')])
+###    df1 = pd.DataFrame([x.split(';') for x in msg_message.split('\n')])
 #    df1 = pd.DataFrame([msg_message.split('\n')])
-    df1 = df1.rename(columns={df1.columns[0]: 'Email'})
+###    df1 = df1.rename(columns={df1.columns[0]: 'Email'})
 #    df = pd.DataFrame([msg_message.split('\n')])
-    df1 = df1.replace(r"^ |\t*$|\s*$", r"", regex=True)
+###    df1 = df1.replace(r"^ |\t*$|\s*$", r"", regex=True)
 #    df1 = df1.replace(r" <", r"xx<", regex=True)
 #     df2['Email'] = df1['Email'].str.split('xx')
 
@@ -60,13 +60,15 @@ for filename in f:
 for filename in f:
     msg = extract_msg.Message(filename)
     msg_message = msg.htmlBody
+    msg_subj = msg.subject
     soup = BeautifulSoup(msg_message, "lxml")
     x = soup.find_all('a')
+    print(msg_subj)
     for link in soup.find_all('a'):
-        matches = ["vcf", "jsp", "/go/", "facebook", "instagram", "linkedin", "tiktok", "twitter", "youtube",
+        matches = ["vcf", "jsp", "/go/", "facebook", "instagram", "linkedin", "tiktok", "twitter", "youtube", "pinterest",
                    "Subscription", "trademarks", "privacy",
                    "unsubscribe", "emailWebview", "mktoTestLink", "policy"]  # list of words for links to stop following
-        matches1 = ["vcf", "jsp", "/go/", "facebook", "instagram", "linkedin", "tiktok", "twitter", "youtube",
+        matches1 = ["vcf", "jsp", "/go/", "facebook", "instagram", "linkedin", "tiktok", "twitter", "youtube", "pinterest",
                     "Subscription", "trademarks", "privacy",
                     "unsubscribe", "emailWebview", "mktoTestLink", "policy",
                     "trackingid"]  # list of words for links to stop following
@@ -140,4 +142,4 @@ driver.close()
 #driver.quit()
 
 
-df1.to_excel(r"C:\Users\jogi\OneDrive - binary-tech.com\Consulting\DF 2022\QA check\working_copy.xlsx", index=False)
+###df1.to_excel(r"C:\Users\jogi\OneDrive - binary-tech.com\Consulting\DF 2022\QA check\working_copy.xlsx", index=False)
