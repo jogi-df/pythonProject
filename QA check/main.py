@@ -35,8 +35,9 @@ def cid(unwrapped_url):
         return cid2.group(1)
 def short_url(long_url):    #removes marketo tracking in url
     # a = [long_url]
-    b = re.split('(\&mkt_tok)|(\?mkt_tok)', long_url)
-    print(b[0])
+    if "mkt_tok" in long_url:
+        b = re.split('(\&mkt_tok)|(\?mkt_tok)', long_url)
+        print(b[0])
 
 
 ###for filename in f:
@@ -76,14 +77,12 @@ for filename in f:
         if "http" in url1:
             #            print("url1", url1) #this should be the original url wrapped by email client or spam filter
             url2 = follow_url(link.get('href'))
-            print("url2", url2)  # possibly a marketo link or go url
+            print("unwrap", url2)  # possibly a marketo link or go url
             if not any(x in url2 for x in matches):
-                #                driver = webdriver.Chrome(options=chrome_options)
                 driver.get(url1)
                 u2 = driver.current_url
-                print("u2", u2)
+                print("follow1", u2)
                 if any(x in u2 for x in matches1):
-                    #                    driver.close()
                     s_url1 = short_url(u2)
                     t_id1 = tracking_id(u2)
                     cid1 = cid(u2)
@@ -92,9 +91,8 @@ for filename in f:
                 else:
                     driver.get(u2)
                     u3 = driver.current_url
-                    print("u3", u3)
+                    print("follow2", u3)
                     if not any(x in u3 for x in matches):
-                        #                        driver.close()
                         s_url1 = short_url(u3)
                         t_id1 = tracking_id(u3)
                         cid1 = cid(u3)
