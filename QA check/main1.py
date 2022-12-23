@@ -40,6 +40,7 @@ def short_url(long_url):    #removes marketo tracking in url
         print(b[0])
 
 
+
 ###for filename in f:
 ###    msg = extract_msg.Message(filename)
 #    msg_sender = msg.sender
@@ -62,9 +63,14 @@ for filename in f:
     msg = extract_msg.Message(filename)
     msg_message = msg.htmlBody
     msg_subj = msg.subject
+    msg_body = msg.body
     soup = BeautifulSoup(msg_message, "lxml")
     x = soup.find_all('a')
-    print(msg_subj)
+    legal = soup.find_all("td", class_="legal")
+#    print(x)  # prints list of a anchors
+    print(msg_subj) # prints subject line
+#    print(msg_body) # prints entire body
+    print(legal)
     for link in soup.find_all('a'):
         matches = ["vcf", "jsp", "/go/", "facebook", "instagram", "linkedin", "tiktok", "twitter", "youtube", "pinterest",
                    "Subscription", "trademarks", "privacy",
@@ -74,6 +80,7 @@ for filename in f:
                     "unsubscribe", "emailWebview", "mktoTestLink", "policy",
                     "trackingid"]  # list of words for links to stop following
         url1 = link.get('href')
+#        print(url1) #wrapped url
         if "http" in url1:
 #            print("url1", url1) #this should be the original url wrapped by email client or spam filter
             # url2 = follow_url(link.get('href'))
