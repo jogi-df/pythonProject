@@ -99,34 +99,6 @@ driver.close()
 #    df1.iloc[:,0] = df1.iloc[:,0].apply(lambda x: x.split('xx'))
 #    a = df1.explode
 
-    # print('Sent On: {}'.format(msg_date))
-#    print('Subject: {}'.format(msg_subj))
-    # print('Body: {}'.format(msg_message))
-    # print(msg_subj)
-#   print('HTML: {}'.format(msg_html))
-
-
-# print(df1)
-# print(df2)
-
-
-# earl = follow_url("http://source.adobe.com/MzYwLUtDSS04MDQAAAGIHIXfp-nQM4dwwbAP2SWFBdipMxJvBHYUVxzie8XHw6A-eUrw4EiBp1vyrK1JLYP0GDGSG8Y=")
-# earl = follow_url("https://nam04.safelinks.protection.outlook.com/?url=https%3A%2F%2Ft-trg.email.adobe.com%2Fr%2F%3Fid%3Dh8ac57dfb%2C8eff47ee%2C84e306a9%26e%3DcDE9Y3JlYXRpdmVjbG91ZC5hZG9iZS5jb20vY2MvZGlzY292ZXIvYXJ0aWNsZS90aGUtdW5sb2NrLWthcmVuLXgtY2hlbmctb24tZ29pbmctdmlyYWwtYW5kLW9wdGltaXppbmctZm9yLWZ1bj9jb250ZXh0Lmd1aWQ9MzUxNzlkMGEtYTkyNC00Y2QzLWE3ZDItNDZhYjBiZDE4NmJjJmNvbnRleHQuaW5pdD1mYWxzZSZwMj04MUc1NVZTNw%26s%3DXb8a8FowjkD7NDoGQ7DcMZNp7r63D0A62b8qDtVHuaY&data=05%7C01%7Cdat83604%40adobe.com%7C82ee8903d3ad448a0eff08daa7103bee%7Cfa7b1b5a7b34438794aed2c178decee1%7C0%7C0%7C638005985407860464%7CUnknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAwMDAiLCJQIjoiV2luMzIiLCJBTiI6Ik1haWwiLCJXVCI6Mn0%3D%7C3000%7C%7C%7C&sdata=y%2FGj0%2BEYpuJ1FcUIJW4lsWMlph3R%2FHqKCD2mJ46AvFM%3D&reserved=0")
-# earl2 = follow_url("https://nam04.safelinks.protection.outlook.com/?url=https%3A%2F%2Ft-trg.email.adobe.com%2Fr%2F%3Fid%3Dh8ac57dfb%2C8eff47ee%2C84e306ac%26e%3DcDE9Y3JlYXRpdmVjbG91ZC5hZG9iZS5jb20vY2MvZGlzY292ZXIvYXJ0aWNsZS9tYWtlLWFuLWFuaW1hdGVkLXBob3RvLWlsbHVzdHJhdGlvbi1pbi1qdXN0LWZpdmUtc3RlcHM_Y29udGV4dC5ndWlkPTM1MTc5ZDBhLWE5MjQtNGNkMy1hN2QyLTQ2YWIwYmQxODZiYyZjb250ZXh0LmluaXQ9ZmFsc2UmcDI9ODU2NjVSMjY%26s%3DZSQpLhYobEYqwlBXGdJ9SxzKjcb5iD4Nd-nRNUG3dvY&data=05%7C01%7Cdat83604%40adobe.com%7C82ee8903d3ad448a0eff08daa7103bee%7Cfa7b1b5a7b34438794aed2c178decee1%7C0%7C0%7C638005985408016680%7CUnknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAwMDAiLCJQIjoiV2luMzIiLCJBTiI6Ik1haWwiLCJXVCI6Mn0%3D%7C3000%7C%7C%7C&sdata=OEVmf916q3I0GXEXcJHlwWvJ4Q8ZKRZNSonkFLrvyGw%3D&reserved=0")
-# print(earl)
-# s_u = short_url(earl)
-# t_id = tracking_id(earl)
-# print(t_id)
-
-
-# print(earl2)
-# s_u2 = short_url(earl2)
-# t_id2 = tracking_id(earl2)
-# print(t_id2)
-
-#DRIVER = 'chromedriver'
-#driver = webdriver.Chrome(DRIVER)
-#driver.get(earl2)
 
 #time.sleep(5)
 #screenshot = driver.save_screenshot(r'C:\Users\jogi\OneDrive - binary-tech.com\Consulting\DF 2022\QA check\my_screenshot.png')
