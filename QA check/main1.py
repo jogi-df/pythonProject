@@ -86,8 +86,13 @@ for filename in f:
     soup = BeautifulSoup(msg_message, "lxml")
     x = soup.find_all('a')
     text = soup.find_all(text=True)
+    #print(text)
 #    legal = soup.find_all("td", class_="legal") # testing printing out sections by class this is the footer
 #    print(x)  # prints list of a anchors
+    if any(re.findall(r'TEST \|', msg_subj)):
+        msg_subj = re.sub("TEST \| ", "", msg_subj)
+    if any(re.findall(r'^\[.*?\]', msg_subj)):
+        msg_subj = re.sub("^\[.*?\] ", "", msg_subj)
     print(msg_subj) # prints subject line
 #    print(msg_body) # prints entire body
 #    print(legal)
