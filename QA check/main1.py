@@ -77,15 +77,19 @@ for filename in f:
     msg_message = msg.htmlBody
     msg_subj = msg.subject
     msg_body = msg.body
-#    print(msg_message)
+    print(msg_body)
+    soup = BeautifulSoup(msg_message, "lxml")
+    text = soup.find_all(text=True)
+    print(text)
     df1 = pd.DataFrame([x.split(';') for x in msg_body.split('\n')])
     df1 = df1.rename(columns={df1.columns[0]: 'Email'})
     df1 = df1.replace(r"^ |\t*$|\s*$", r"", regex=True)
     df1 = df1.replace(r'<[^<]*?/?>', r'', regex=True)
-    df1 = df1.replace(r' / [\u200B -\u200D\uFEFF] /', '', regex=True)
+    df1 = df1.replace(r' ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌  ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌  ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌  ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌  ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌  ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌  ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌  ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌', '', regex=True)
+#    df1 = df1.replace(r'(/\s*‌)*?', '', regex=True)
+#    df1 = df1.replace(r' / [\u200B -\u200D\uFEFF] /', '', regex=True)
     soup = BeautifulSoup(msg_message, "lxml")
     x = soup.find_all('a')
-    text = soup.find_all(text=True)
     #print(text)
 #    legal = soup.find_all("td", class_="legal") # testing printing out sections by class this is the footer
 #    print(x)  # prints list of a anchors
