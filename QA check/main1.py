@@ -3,7 +3,8 @@ import requests
 import glob
 import pandas as pd
 import re
-import time
+import openpyxl
+from openpyxl import load_workbook
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -13,6 +14,9 @@ chrome_options = Options()
 chrome_options.add_argument("--headless")
 chrome_options.add_argument("--window-size=%s" % WINDOW_SIZE)
 driver = webdriver.Chrome(options=chrome_options)
+
+#file_name = r"C:\Users\jogi\OneDrive - binary-tech.com\Consulting\DF 2022\QA check\working_copy.xlsx"
+writer = pd.ExcelWriter(r"C:\Users\jogi\OneDrive - binary-tech.com\Consulting\DF 2022\QA check\working_copy.xlsx", engine='openpyxl', mode='a')
 
 f = glob.glob(r"C:\Users\jogi\OneDrive - binary-tech.com\Consulting\DF 2022\QA check\emails/*.msg")
 #f = glob.glob(r"C:\test\emails/*.msg")
@@ -72,16 +76,21 @@ def platform(url):
 #    df1 = df1.replace(r" <", r"xx<", regex=True)
 #     df2['Email'] = df1['Email'].str.split('xx')
 
+#wb=load_workbook(r"C:\Users\jogi\OneDrive - binary-tech.com\Consulting\DF 2022\QA check\working_copy.xlsx") #open workbook to add sheets to--need to fix this
+i=0
+#book = openpyxl.load_workbook(r"C:\Users\jogi\OneDrive - binary-tech.com\Consulting\DF 2022\QA check\working_copy.xlsx", 'rb')
+#writer.book = book
+
 # this part extracts all the URLs in long form, unwraps from outlook, follows the urls
 # and prints the response and short form as well as tracking id if exists
 for filename in f:
     msg = extract_msg.Message(filename)
     msg_message = msg.htmlBody
     msg_subj = msg.subject
+#    msg_subj_title = msg_subj[0:30] # using first 30 characters of SL for ws title
     msg_body = msg.body
     soup = BeautifulSoup(msg_message, "lxml")
     text = soup.find_all(text=True)
-#    print(text)
     df1 = pd.DataFrame([x.split(';') for x in msg_body.split('\n')])
     df1 = df1.rename(columns={df1.columns[0]: 'Email'})
     df1 = df1.replace(r"^ |\t*$|\s*$", r"", regex=True)
@@ -90,7 +99,6 @@ for filename in f:
     df1 = df1.replace(r' ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌', '', regex=True)
     soup = BeautifulSoup(msg_message, "lxml")
     x = soup.find_all('a')
-    #print(text)
 #    legal = soup.find_all("td", class_="legal") # testing printing out sections by class this is the footer
 #    print(x)  # prints list of a anchors
     if any(re.findall(r'TEST \|', msg_subj)): # removes TEST from SL - marketo
@@ -98,6 +106,7 @@ for filename in f:
     if any(re.findall(r'^\[.*?\]', msg_subj)): # removes bracketed test info from SL - campaign
         msg_subj = re.sub("^\[.*?\] ", "", msg_subj)
     data.append(msg_subj)
+    msg_subj_title = msg_subj[0:30] # using first 30 characters of SL for ws title
 #    print(msg_subj) # prints subject line
 #    print(msg_body) # prints entire body
 #    print(legal)
@@ -127,12 +136,16 @@ for filename in f:
     print("Email platform is:", platform)
     df2 = pd.DataFrame({'Email':data})
     df1 = df1.append(df2)
-    print(df1)
+#    ws=wb.create_sheet(msg_subj)
+#    print(df1)
+    df1.to_excel(writer, sheet_name=msg_subj_title, index=False)
+    writer.save()
 driver.close()
+writer.close()
 
 #time.sleep(5)
 #screenshot = driver.save_screenshot(r'C:\Users\jogi\OneDrive - binary-tech.com\Consulting\DF 2022\QA check\my_screenshot.png')
 #driver.quit()
 
 
-df1.to_excel(r"C:\Users\jogi\OneDrive - binary-tech.com\Consulting\DF 2022\QA check\working_copy.xlsx", index=False)
+# df1.to_excel(r"C:\Users\jogi\OneDrive - binary-tech.com\Consulting\DF 2022\QA check\working_copy.xlsx", sheet_name=cid1, index=False)
