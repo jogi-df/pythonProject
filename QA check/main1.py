@@ -17,6 +17,7 @@ driver = webdriver.Chrome(options=chrome_options)
 f = glob.glob(r"C:\Users\jogi\OneDrive - binary-tech.com\Consulting\DF 2022\QA check\emails/*.msg")
 #f = glob.glob(r"C:\test\emails/*.msg")
 df2 = pd. DataFrame()
+data = []
 
 # declaring variables
 platform = ""
@@ -39,10 +40,12 @@ def cid(unwrapped_url):
 def short_url(long_url):    #removes tracking in url
     if "mkt_tok" in long_url:
         b = re.split('(\&mkt_tok)|(\?mkt_tok)', long_url)
-        print(b[0])
+        data.append(b[0])
+#        print(b[0])
     elif "?context.guid" in long_url:
         b = re.split('(\?context.guid)', long_url)
-        print(b[0])
+        data.append(b[0])
+#        print(b[0])
 
 def platform(url):
     if "marketo" in url:
@@ -69,7 +72,6 @@ def platform(url):
 #    df1 = df1.replace(r" <", r"xx<", regex=True)
 #     df2['Email'] = df1['Email'].str.split('xx')
 
-i = 0
 # this part extracts all the URLs in long form, unwraps from outlook, follows the urls
 # and prints the response and short form as well as tracking id if exists
 for filename in f:
@@ -77,7 +79,6 @@ for filename in f:
     msg_message = msg.htmlBody
     msg_subj = msg.subject
     msg_body = msg.body
-#    print(msg_body)
     soup = BeautifulSoup(msg_message, "lxml")
     text = soup.find_all(text=True)
 #    print(text)
@@ -87,7 +88,6 @@ for filename in f:
     df1 = df1.replace(r'<[^<]*?/?>', r'', regex=True)
     df1 = df1.replace(r' ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌  ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌  ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌  ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌  ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌  ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌  ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌  ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌', '', regex=True)
     df1 = df1.replace(r' ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌', '', regex=True)
-#    df1 = df1.replace(r' / [\u200B -\u200D\uFEFF] /', '', regex=True)
     soup = BeautifulSoup(msg_message, "lxml")
     x = soup.find_all('a')
     #print(text)
@@ -97,7 +97,8 @@ for filename in f:
         msg_subj = re.sub("TEST \| ", "", msg_subj)
     if any(re.findall(r'^\[.*?\]', msg_subj)): # removes bracketed test info from SL - campaign
         msg_subj = re.sub("^\[.*?\] ", "", msg_subj)
-    print(msg_subj) # prints subject line
+    data.append(msg_subj)
+#    print(msg_subj) # prints subject line
 #    print(msg_body) # prints entire body
 #    print(legal)
     for link in soup.find_all('a'):
@@ -108,27 +109,26 @@ for filename in f:
             # url2 = follow_url(link.get('href'))
             driver.get(url1)
             url2 = driver.current_url
-            print("unwrap", url2)  # possibly a marketo link or go url
+            data.append("unwrap " + url2)
+            # print("unwrap", url2)  # possibly a marketo link or go url
             if "trackingid" in url2:
                 t_id1 = tracking_id(url2)
-                print(t_id1)
+                data.append(t_id1)
+                # print(t_id1)
             if "rtid=" in url2:
                 cid1 = cid(url2)
-                print(cid1)
+                data.append(cid1)
+                # print(cid1)
             s_url1 = short_url(url2)
             if any(re.findall(r'marketo|mkt_tok|mkto', url2)):
                 platform = "Marketo"
             elif any(re.findall(r'campaign|m3-page', url2)):
                 platform = "Campaign"
     print("Email platform is:", platform)
-    i = i + 1
+    df2 = pd.DataFrame({'Email':data})
+    df1 = df1.append(df2)
+    print(df1)
 driver.close()
-
-#    df1.set_index(['Email']).apply(lambda x: x.str.split('xx').explode()).reset_index()
-
-#    df1.iloc[:,0] = df1.iloc[:,0].apply(lambda x: x.split('xx'))
-#    a = df1.explode
-
 
 #time.sleep(5)
 #screenshot = driver.save_screenshot(r'C:\Users\jogi\OneDrive - binary-tech.com\Consulting\DF 2022\QA check\my_screenshot.png')
