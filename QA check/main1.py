@@ -140,6 +140,8 @@ for filename in f:
 #    print(df1)
     df1.to_excel(writer, sheet_name=msg_subj_title, index=False)
     writer.save()
+    df1 = df1[0:0]
+    data = []
 driver.close()
 writer.close()
 
