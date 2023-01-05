@@ -16,7 +16,8 @@ chrome_options.add_argument("--window-size=%s" % WINDOW_SIZE)
 driver = webdriver.Chrome(options=chrome_options)
 
 #file_name = r"C:\Users\jogi\OneDrive - binary-tech.com\Consulting\DF 2022\QA check\working_copy.xlsx"
-writer = pd.ExcelWriter(r"C:\Users\jogi\OneDrive - binary-tech.com\Consulting\DF 2022\QA check\working_copy.xlsx", engine='openpyxl', mode='a')
+
+writer = pd.ExcelWriter(r"C:\Users\jogi\OneDrive - binary-tech.com\Consulting\DF 2022\QA check\working_copy.xlsx", engine='xlsxwriter', engine_kwargs={'options':{'strings_to_formulas': False}})
 
 f = glob.glob(r"C:\Users\jogi\OneDrive - binary-tech.com\Consulting\DF 2022\QA check\emails/*.msg")
 #f = glob.glob(r"C:\test\emails/*.msg")
@@ -41,6 +42,12 @@ def cid(unwrapped_url):
     if 'rtid=' in unwrapped_url:
         cid2 = re.search("rtid=(.{18})", unwrapped_url)
         return cid2.group(1)
+
+def activityid(unwrapped_url):
+    if 'ActivityID=' in unwrapped_url:
+        aid2 = re.search("ActivityID=(.{7})", unwrapped_url)
+        return aid2.group(1)
+
 def short_url(long_url):    #removes tracking in url
     if "mkt_tok" in long_url:
         b = re.split('(\&mkt_tok)|(\?mkt_tok)', long_url)
@@ -105,8 +112,10 @@ for filename in f:
         msg_subj = re.sub("TEST \| ", "", msg_subj)
     if any(re.findall(r'^\[.*?\]', msg_subj)): # removes bracketed test info from SL - campaign
         msg_subj = re.sub("^\[.*?\] ", "", msg_subj)
-    data.append(msg_subj)
-    msg_subj_title = msg_subj[0:30] # using first 30 characters of SL for ws title
+    #data.append(msg_subj)
+    df1.loc[df1.index[0], 'Email'] = msg_subj  # adds in SL in xl file
+    print("Processing: " + msg_subj) # prints email SL so it looks like it's doing something
+#    msg_subj_title = msg_subj[0:30] # using first 30 characters of SL for ws title
 #    print(msg_subj) # prints subject line
 #    print(msg_body) # prints entire body
 #    print(legal)
@@ -124,24 +133,40 @@ for filename in f:
                 t_id1 = tracking_id(url2)
                 data.append(t_id1)
                 # print(t_id1)
+            else:
+                data.append("no tracking ID")
+                # print("no tracking ID")
             if "rtid=" in url2:
                 cid1 = cid(url2)
                 data.append(cid1)
                 # print(cid1)
+            else:
+                data.append("no CID")
+            if "ActivityID=" in url2:
+                aid1 = activityid(url2)
+                data.append(aid1)
+                # print(cid1)
+            else:
+                data.append("no ActivityID")
+                # print("no ActivityID")
             s_url1 = short_url(url2)
             if any(re.findall(r'marketo|mkt_tok|mkto', url2)):
                 platform = "Marketo"
-            elif any(re.findall(r'campaign|m3-page', url2)):
+            elif any(re.findall(r'campaign|m3-page|m2-page|m1-page', url2)):
                 platform = "Campaign"
-    print("Email platform is:", platform)
+    # print("Email platform is:", platform)
     df2 = pd.DataFrame({'Email':data})
-    df1 = df1.append(df2)
+    #df1 = df1.append(df2)
+    frames = [df1, df2]
+    df1 = pd.concat(frames) # using concat instead of append due to decprication of append
 #    ws=wb.create_sheet(msg_subj)
 #    print(df1)
-    df1.to_excel(writer, sheet_name=msg_subj_title, index=False)
-    writer.save()
+    ws_title = "Email " + str(i)
+    df1.to_excel(writer, sheet_name=ws_title, index=False)
+    #writer.save()
     df1 = df1[0:0]
     data = []
+    i = i + 1
 driver.close()
 writer.close()
 

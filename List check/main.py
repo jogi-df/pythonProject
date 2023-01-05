@@ -3,7 +3,7 @@ import easygui
 import openpyxl as op
 import numpy as np
 import os
-from functions import check_optional_col, check_required_col, opt_in, opt_in_check, check_phone_col, whitespace_remover, check_exists
+from functions import check_optional_col, check_required_col, opt_in, opt_in_check, check_phone_col, whitespace_remover, check_exists, state_check
 from validate_email import validate_email
 from io import StringIO
 import phonenumbers
@@ -154,6 +154,7 @@ check_exists('Company Name', 'Comp Good', df)
 
 df['City'] = df['City'].str.title()                                   #Capitalize first letter, lowercase rest
 
+state_check('State', df)
 check_required_col('State','State Good',df,df_states,'Abbreviation')
 
 
@@ -176,10 +177,10 @@ if df['Phone'].dtypes != 'object':
     df['Phone'] = df['Phone'].astype(str)
 df['Phone'] = df['Phone'].replace('nan', np.nan)
 
-#df['Phone'] = df['Phone'].str.replace('\D', '', regex=True)
-#df['Phone'].replace(to_replace="^[1]", value=r"", regex=True, inplace=True)  #remove the leading 1
+df['Phone'] = df['Phone'].str.replace('\D', '', regex=True)
+df['Phone'].replace(to_replace="^[1]", value=r"", regex=True, inplace=True)  #remove the leading 1
 #df['Phone'] = df['Phone'].str.replace('0$', '', regex=True)  #if all entries have trailing zero uncomment this line
-#df['Ph status'] = df['Phone'].str.match("[0-9]{10}$")
+df['Ph status'] = df['Phone'].str.match("[0-9]{10}$")
 df.loc[df['Phone'].isnull(), 'Ph status'] = 'optional'
 
 
