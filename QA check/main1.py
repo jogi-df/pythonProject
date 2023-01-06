@@ -58,7 +58,7 @@ def short_url(long_url):    #removes tracking in url
         data.append(b[0])
 #        print(b[0])
 
-def platform(url):
+def platform(url): # figures out if email is sent from marketo or AC.  could be useful in the future
     if "marketo" in url:
         p = "Marketo"
         return p
@@ -66,27 +66,15 @@ def platform(url):
         p = "Campaign"
         return p
 
+def sender(email_sender): # extracts display name and sender email from the sender field
+   email_1 = re.search("^([\w\s]+)\<(.*?)\>", email_sender)
+   dn = email_1.group(1)
+   em = email_1.group(2)
+   return dn, em
 
-###for filename in f:
-###    msg = extract_msg.Message(filename)
-###    msg_message = msg.body
-###    df1 = pd.DataFrame([x.split(';') for x in msg_message.split('\n')])
-###    df1 = df1.rename(columns={df1.columns[0]: 'Email'})
-###    df1 = df1.replace(r"^ |\t*$|\s*$", r"", regex=True)
-#    msg_sender = msg.sender
-#    msg_date = msg.date
-#    msg_subj = msg.subject
-#    msg_message = msg.htmlBody
-#    print('Sender: {}'.format(msg_sender))
-#    df1 = pd.DataFrame([msg_message.split('\n')])
-#    df = pd.DataFrame([msg_message.split('\n')])
-#    df1 = df1.replace(r" <", r"xx<", regex=True)
-#     df2['Email'] = df1['Email'].str.split('xx')
 
-#wb=load_workbook(r"C:\Users\jogi\OneDrive - binary-tech.com\Consulting\DF 2022\QA check\working_copy.xlsx") #open workbook to add sheets to--need to fix this
 i=0
-#book = openpyxl.load_workbook(r"C:\Users\jogi\OneDrive - binary-tech.com\Consulting\DF 2022\QA check\working_copy.xlsx", 'rb')
-#writer.book = book
+
 
 # this part extracts all the URLs in long form, unwraps from outlook, follows the urls
 # and prints the response and short form as well as tracking id if exists
@@ -111,9 +99,14 @@ for filename in f:
     if any(re.findall(r'TEST \|', msg_subj)): # removes TEST from SL - marketo
         msg_subj = re.sub("TEST \| ", "", msg_subj)
     if any(re.findall(r'^\[.*?\]', msg_subj)): # removes bracketed test info from SL - campaign
+        aid3 = re.search("^\[(.{7})", msg_subj)
+        aid3 = aid3.group(1)
         msg_subj = re.sub("^\[.*?\] ", "", msg_subj)
-    #data.append(msg_subj)
-    df1.loc[df1.index[0], 'Email'] = msg_subj  # adds in SL in xl file
+    data.append("SL:" + msg_subj)
+    dn, em = sender(msg.sender)
+    data.append("Display name: " + dn)
+    data.append("Sender email: " + em)
+#    df1.loc[df1.index[0], 'Email'] = msg_subj  # adds in SL in xl file - using this overwrites PH because of indexing that i haven't fixed
     print("Processing: " + msg_subj) # prints email SL so it looks like it's doing something
 #    msg_subj_title = msg_subj[0:30] # using first 30 characters of SL for ws title
 #    print(msg_subj) # prints subject line
@@ -161,7 +154,8 @@ for filename in f:
     df1 = pd.concat(frames) # using concat instead of append due to decprication of append
 #    ws=wb.create_sheet(msg_subj)
 #    print(df1)
-    ws_title = "Email " + str(i)
+#    ws_title = "Email " + str(i)
+    ws_title = aid3
     df1.to_excel(writer, sheet_name=ws_title, index=False)
     #writer.save()
     df1 = df1[0:0]
