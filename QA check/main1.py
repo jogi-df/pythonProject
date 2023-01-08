@@ -3,19 +3,22 @@ import requests
 import glob
 import pandas as pd
 import re
+import time
 import openpyxl
 from openpyxl import load_workbook
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from fake_useragent import UserAgent
 
-WINDOW_SIZE = "1920,1080"
+WINDOW_SIZE = "1024,768"
 chrome_options = Options()
 chrome_options.add_argument("--headless")
 chrome_options.add_argument("--window-size=%s" % WINDOW_SIZE)
+chrome_options.add_argument("user-agent={userAgent}")
 driver = webdriver.Chrome(options=chrome_options)
 
-#file_name = r"C:\Users\jogi\OneDrive - binary-tech.com\Consulting\DF 2022\QA check\working_copy.xlsx"
+save_to_folder = r"C:\Users\jogi\OneDrive - binary-tech.com\Consulting\DF 2022\QA check"
 
 writer = pd.ExcelWriter(r"C:\Users\jogi\OneDrive - binary-tech.com\Consulting\DF 2022\QA check\working_copy.xlsx", engine='xlsxwriter', engine_kwargs={'options':{'strings_to_formulas': False}})
 
@@ -67,7 +70,7 @@ def platform(url): # figures out if email is sent from marketo or AC.  could be 
         return p
 
 def sender(email_sender): # extracts display name and sender email from the sender field
-   email_1 = re.search("^([\w\s]+)\<(.*?)\>", email_sender)
+   email_1 = re.search("^([\w\s]+)\s\<(.*?)\>", email_sender)
    dn = email_1.group(1)
    em = email_1.group(2)
    return dn, em
@@ -112,6 +115,7 @@ for filename in f:
 #    print(msg_subj) # prints subject line
 #    print(msg_body) # prints entire body
 #    print(legal)
+    j = 0
     for link in soup.find_all('a'):
         url1 = link.get('href')
 #        print(url1) #wrapped url
@@ -147,11 +151,20 @@ for filename in f:
                 platform = "Marketo"
             elif any(re.findall(r'campaign|m3-page|m2-page|m1-page', url2)):
                 platform = "Campaign"
+
+            # this section creates the screenshots from the URLs
+            driver.get(url2)
+            ss_file = "ss" + str(j) + ".png"
+            time.sleep(5)
+            driver.save_screenshot(save_to_folder + "\\" + ss_file)
+            j = j + 1
+
+
     # print("Email platform is:", platform)
     df2 = pd.DataFrame({'Email':data})
     #df1 = df1.append(df2)
     frames = [df1, df2]
-    df1 = pd.concat(frames) # using concat instead of append due to decprication of append
+    df1 = pd.concat(frames) # using concat instead of append due to deprecation of append
 #    ws=wb.create_sheet(msg_subj)
 #    print(df1)
 #    ws_title = "Email " + str(i)
@@ -163,10 +176,6 @@ for filename in f:
     i = i + 1
 driver.close()
 writer.close()
+writer.quit()
+driver.quit()
 
-#time.sleep(5)
-#screenshot = driver.save_screenshot(r'C:\Users\jogi\OneDrive - binary-tech.com\Consulting\DF 2022\QA check\my_screenshot.png')
-#driver.quit()
-
-
-# df1.to_excel(r"C:\Users\jogi\OneDrive - binary-tech.com\Consulting\DF 2022\QA check\working_copy.xlsx", sheet_name=cid1, index=False)
