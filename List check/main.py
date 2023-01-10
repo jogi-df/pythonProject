@@ -11,12 +11,15 @@ import phonenumbers
 #reference files
 #df_zip = pd.read_excel(r'C:\test\ZIP_Locale_Detail.xls')
 
+# turn checks on or off
+change_perm_date = "off"
+phone_check = "off"
+phone_remove_zeros = "off"
 
 
 #sets the working folder
 working_folder = easygui.diropenbox(msg="Select the working folder", title="Working folder")
 fold = StringIO(working_folder)
-
 
 #easygui requests a file select for the main data frame.  Easygui returns the path of the file
 raw_file_path = easygui.fileopenbox(msg="Select the raw data file.  Don't use the original!", default=working_folder + "\*")
@@ -86,6 +89,13 @@ df.loc[df['Timeline for Purchasing'] == '7 to 9 months', 'Timeline for Purchasin
 df.loc[df['Timeline for Purchasing'] == '10 to 12 months', 'Timeline for Purchasing'] = '10-12 months'
 df.loc[df['Timeline for Purchasing'] == '10 To 12 Months', 'Timeline for Purchasing'] = '10-12 months'
 df.loc[df['Industry'] == 'Advertising ', 'Industry'] = 'Advertising'
+df.loc[df['Country'] == 'US', 'Country'] = 'United States'
+df.loc[df['Attended'] == 'Registered', 'Attended'] = 'Responded/Registered'
+df.loc[df['Employee Range'] == '50-99', 'Employee Range'] = '10-99'
+
+#remove leading and trailing spaces
+df['Industry'] = df['Industry'].str.replace(r"^ +| +$", r"", regex=True)
+
 
 #fix states
 #df['State'] = df['State'].map(df_states.drop_duplicates().set_index('supplier_id')['retailer_id'])
@@ -114,7 +124,8 @@ if df['Permissions Create Date'].dtypes != 'object':
     df['Permissions Create Date'] = df['Permissions Create Date'].astype(str)
 
 #if df['Permissions Create Date'].len()  8:
-#df["Permissions Create Date"] = pd.to_datetime(df["Permissions Create Date"]).dt.strftime("%m%d%Y")
+if change_perm_date == 'on':
+    df["Permissions Create Date"] = pd.to_datetime(df["Permissions Create Date"]).dt.strftime("%m%d%Y")
 
 #if df.loc[df['Permissions Create Date'].len() > 10]
 #if df.loc[(df['Permissions Create Date'].str.match("\/"))]:
@@ -160,28 +171,26 @@ check_required_col('State','State Good',df,df_states,'Abbreviation')
 
 #check zip code length for 5 characters or 5+4 or Canadian zip
 df['Zip'] = df['Zip'].astype(str)
-
-
+df['Zip'] = df['Zip'].replace(r".0", r"", regex=True)
 df['Zip'] = df['Zip'].apply(lambda x : str(x).zfill(5))
 df['Zip Status'] = df['Zip'].str.match("^[']?[0-9]{5}(?:-[0-9]{4})?$|([ABCEGHJ-NPRSTVXY]\d[ABCEGHJ-NPRSTV-Z][ -]?\d[ABCEGHJ-NPRSTV-Z]\d)")
 #df.loc[df['Zip'].str.match("^[0-9]{4}") == True, 'Zip'] = df.loc['Zip'].str.zfill(5)
 #[df['Zip'].str.match("^[0-9]{4}") == True, df['Zip']] = df['Zip'].str.zfill(5)
 
 
-#df['Perm Date'] = df['Permissions Create Date'].str.match("[0-9]{8}")
-
 check_required_col('Country','Country Good',df,df_acceptable,'Country')
 
+if phone_check == 'on':
 #df['Ph status'] = pd.np.where(df.Phone.isnull(), "optional")
-if df['Phone'].dtypes != 'object':
-    df['Phone'] = df['Phone'].astype(str)
-df['Phone'] = df['Phone'].replace('nan', np.nan)
-
-df['Phone'] = df['Phone'].str.replace('\D', '', regex=True)
-df['Phone'].replace(to_replace="^[1]", value=r"", regex=True, inplace=True)  #remove the leading 1
-#df['Phone'] = df['Phone'].str.replace('0$', '', regex=True)  #if all entries have trailing zero uncomment this line
-df['Ph status'] = df['Phone'].str.match("[0-9]{10}$")
-df.loc[df['Phone'].isnull(), 'Ph status'] = 'optional'
+    if df['Phone'].dtypes != 'object':
+        df['Phone'] = df['Phone'].astype(str)
+    df['Phone'] = df['Phone'].replace('nan', np.nan)
+    df['Phone'] = df['Phone'].str.replace('\D', '', regex=True)
+    df['Phone'].replace(to_replace="^[1]", value=r"", regex=True, inplace=True)  #remove the leading 1
+    if phone_remove_zeros == 'on':
+        df['Phone'] = df['Phone'].str.replace('0$', '', regex=True)  #if all entries have trailing zero
+    df['Ph status'] = df['Phone'].str.match("[0-9]{10}$")
+    df.loc[df['Phone'].isnull(), 'Ph status'] = 'optional'
 
 
 
