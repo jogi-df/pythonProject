@@ -1,5 +1,7 @@
 import numpy as np
+from uszipcode import SearchEngine
 
+search = SearchEngine()
 # United States of America Python Dictionary to translate States,
 # Districts & Territories to Two-Letter codes and vice versa.
 #
@@ -184,11 +186,13 @@ def whitespace_remover(dataframe):
             pass
 
 
+def zip_city(x):
+    city = search.by_zipcode(x).major_city
+    return city if city else 'None'
 
-
-
-
-
+def zip_state(x):
+    state = search.by_zipcode(x).state
+    return state if state else 'None'
 
 #def zip_check(colchk,colres,datasrc):
 

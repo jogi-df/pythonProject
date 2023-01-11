@@ -3,11 +3,11 @@ import easygui
 import openpyxl as op
 import numpy as np
 import os
-from functions import check_optional_col, check_required_col, opt_in, opt_in_check, check_phone_col, whitespace_remover, check_exists, state_check
+from functions import check_optional_col, check_required_col, opt_in, opt_in_check, check_phone_col, whitespace_remover, check_exists, state_check, zip_city, zip_state
 from validate_email import validate_email
 from io import StringIO
 import phonenumbers
-from uszipcode import SearchEngine
+from uszipcode import SearchEngine, SimpleZipcode
 
 #reference files
 #df_zip = pd.read_excel(r'C:\test\ZIP_Locale_Detail.xls')
@@ -97,6 +97,8 @@ df.loc[df['Employee Range'] == '50-99', 'Employee Range'] = '10-99'
 #remove leading and trailing spaces
 df['Industry'] = df['Industry'].str.replace(r"^ +| +$", r"", regex=True)
 df['Employee Range'] = df['Employee Range'].str.replace(r"^ +| +$", r"", regex=True)
+df['Email'] = df['Email'].str.replace(r"^ +| +$", r"", regex=True)
+
 
 #remove
 
@@ -174,19 +176,17 @@ check_required_col('State','State Good',df,df_states,'Abbreviation')
 
 
 #check zip code length for 5 characters or 5+4 or Canadian zip
-engine = SearchEngine()
-zip = df['Zip']
-print(zip)
-zipcode = engine.by_zipcode(zip)
-print(zipcode.major_city)
-df['City Lookup'] = zipcode.major_city
+search = SearchEngine()
 df['Zip'] = df['Zip'].astype(str)
 #df['Zip'] = df['Zip'].replace(r".0", r"", regex=True)
 df['Zip'] = df['Zip'].apply(lambda x : str(x).zfill(5))
 df['Zip Status'] = df['Zip'].str.match("^[']?[0-9]{5}(?:-[0-9]{4})?$|([ABCEGHJ-NPRSTVXY]\d[ABCEGHJ-NPRSTV-Z][ -]?\d[ABCEGHJ-NPRSTV-Z]\d)")
 
-#df.loc[df['Zip'].str.match("^[0-9]{4}") == True, 'Zip'] = df.loc['Zip'].str.zfill(5)
-#[df['Zip'].str.match("^[0-9]{4}") == True, df['Zip']] = df['Zip'].str.zfill(5)
+
+# for zip/state checking
+
+#df['City Temp'] = df['Zip'].apply(zip_city)
+#df['State Temp'] = df['Zip'].apply(zip_state)
 
 
 check_required_col('Country','Country Good',df,df_acceptable,'Country')
@@ -208,22 +208,6 @@ if phone_check == 'on':
 #test fixes
 df.loc[df['Phone'].isnull(), 'OPT IN PHONE'] = 'N'
 
-#remove ext or x or any non number character from extension
-#df['Extension'] = df['Extension'].astype(str)
-#df['Extension'] = df['Extension'].str.replace('\D', '')
-
-
-#if df.loc[df['Phone'].isnull() and ['OPT IN PHONE']] != 'N':
-
-#df['OPT IN phone chk'] = np.where((df['Phone'].isnull()) and (df['OPT IN PHONE'] != 'N'), 'FALSE', 'TRUE')
-
-
-
-
-#df.loc[df['Employee Range'] == '10/1/1999', 'Employee Range'] = '\'10-99'
-#df.loc[df['Employee Range'] == '1/9/2022', 'Employee Range'] = '\'1-9'
-
-
 #clean up the opt in responses - required - chnage this to check only
 opt_in(df,'OPT IN EMAIL')
 opt_in(df,'OPT IN MAIL')
@@ -233,7 +217,6 @@ opt_in(df,'OPT IN THIRD PARTY')
 check_required_col('Product Interest','Prod Int',df,df_acceptable, 'Product Interest')
 
 check_optional_col('Additional Product Interest','Addl Prod Int',df,df_acceptable)
-
 
 
 check_optional_col('Estimated Number of Units','Est Num Units',df,df_acceptable)
