@@ -15,7 +15,7 @@ import phonenumbers
 change_perm_date = "off"
 phone_check = "off"
 phone_remove_zeros = "off"
-
+city_check = "off"
 
 #sets the working folder
 working_folder = easygui.diropenbox(msg="Select the working folder", title="Working folder")
@@ -95,7 +95,9 @@ df.loc[df['Employee Range'] == '50-99', 'Employee Range'] = '10-99'
 
 #remove leading and trailing spaces
 df['Industry'] = df['Industry'].str.replace(r"^ +| +$", r"", regex=True)
+df['Employee Range'] = df['Employee Range'].str.replace(r"^ +| +$", r"", regex=True)
 
+#remove
 
 #fix states
 #df['State'] = df['State'].map(df_states.drop_duplicates().set_index('supplier_id')['retailer_id'])
@@ -154,16 +156,17 @@ check_optional_col('Salutation','Sal Good',df,df_acceptable)
 #check_exists('First Name', 'F Name',df)
 df['First Name'] = df['First Name'].replace(r"^ +| +$", r"", regex=True)
 df['First Name'] = df['First Name'].str.title()
-df['F Name'] = df['First Name'].str.match("^[_A-z|(-|'|á|á|é|ñ|ó|è|Ô|ç|í)?]*((\s)*[_A-z])*$")
+df['F Name'] = df['First Name'].str.match("^[_A-z|(-|'|á|á|ć|é|ñ|ó|è|Ô|ç|í)?]*((\s)*[_A-z])*$")
 
 #check_exists('Last Name', 'L Name', df)
 df['Last Name'] = df['Last Name'].replace(r"^ +| +$", r"", regex=True)          #remove leading and trailing spaces
 df['Last Name'] = df['Last Name'].str.title()                                   #Capitalize first letter, lowercase rest
-df['L Name'] = df['Last Name'].str.match("^[_A-z|(-|'|á|ã|é|ñ|ó|è|ç|Ô|í)?]*((\s)*[_A-z]|(-|é|ñ|ó|è|ç|Ô|í)?)*$")
+df['L Name'] = df['Last Name'].str.match("^[_A-z|(-|'|á|ã|é|ñ|ó|è|ç|ć|Ô|í)?]*((\s)*[_A-z]|(-|é|ñ|ó|è|ç|Ô|í)?)*$")
 
 check_exists('Company Name', 'Comp Good', df)
 
-df['City'] = df['City'].str.title()                                   #Capitalize first letter, lowercase rest
+if city_check == "on":
+    df['City'] = df['City'].str.title()                                   #Capitalize first letter, lowercase rest
 
 state_check('State', df)
 check_required_col('State','State Good',df,df_states,'Abbreviation')
