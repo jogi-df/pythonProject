@@ -176,10 +176,14 @@ check_required_col('State','State Good',df,df_states,'Abbreviation')
 #check zip code length for 5 characters or 5+4 or Canadian zip
 engine = SearchEngine()
 df['Zip'] = df['Zip'].astype(str)
-df['Zip'] = df['Zip'].replace(r".0", r"", regex=True)
+#df['Zip'] = df['Zip'].replace(r".0", r"", regex=True)
 df['Zip'] = df['Zip'].apply(lambda x : str(x).zfill(5))
 df['Zip Status'] = df['Zip'].str.match("^[']?[0-9]{5}(?:-[0-9]{4})?$|([ABCEGHJ-NPRSTVXY]\d[ABCEGHJ-NPRSTV-Z][ -]?\d[ABCEGHJ-NPRSTV-Z]\d)")
-df['City Lookup'] = engine.by_zipcode(df['Zip'])
+zip = df['Zip']
+print(zip)
+zip_city = engine.by_zipcode(zip)
+print(zip_city)
+df['City Lookup'] = zip_city
 #df.loc[df['Zip'].str.match("^[0-9]{4}") == True, 'Zip'] = df.loc['Zip'].str.zfill(5)
 #[df['Zip'].str.match("^[0-9]{4}") == True, df['Zip']] = df['Zip'].str.zfill(5)
 
