@@ -181,9 +181,9 @@ df['Zip'] = df['Zip'].apply(lambda x : str(x).zfill(5))
 df['Zip Status'] = df['Zip'].str.match("^[']?[0-9]{5}(?:-[0-9]{4})?$|([ABCEGHJ-NPRSTVXY]\d[ABCEGHJ-NPRSTV-Z][ -]?\d[ABCEGHJ-NPRSTV-Z]\d)")
 zip = df['Zip']
 print(zip)
-zip_city = engine.by_zipcode(zip)
-print(zip_city)
-df['City Lookup'] = zip_city
+zipcode = engine.by_zipcode(zip)
+print(zipcode.major_city)
+df['City Lookup'] = zipcode.major_city
 #df.loc[df['Zip'].str.match("^[0-9]{4}") == True, 'Zip'] = df.loc['Zip'].str.zfill(5)
 #[df['Zip'].str.match("^[0-9]{4}") == True, df['Zip']] = df['Zip'].str.zfill(5)
 
