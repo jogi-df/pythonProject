@@ -7,7 +7,7 @@ search = SearchEngine()
 #
 # also added in Canadian territories.  yes i know they're not us states.
 
-us_state_to_abbrev = {
+state_to_abbrev = {
     "Alabama": "AL",
     "Alaska": "AK",
     "Arizona": "AZ",
@@ -58,7 +58,7 @@ us_state_to_abbrev = {
     "West Virginia": "WV",
     "Wisconsin": "WI",
     "Wyoming": "WY",
-    "District of Columbia": "DC",
+    "District Of Columbia": "DC",
     "American Samoa": "AS",
     "Guam": "GU",
     "Northern Mariana Islands": "MP",
@@ -84,8 +84,7 @@ us_state_to_abbrev = {
 # abbrev_to_us_state = dict(map(reversed, us_state_to_abbrev.items()))
 
 def state_check(colchk, datasrc):       #replace state names with abbreviation
-#    datasrc[colchk] = datasrc[colchk].str.title()
-    datasrc[colchk] = datasrc[colchk].replace(us_state_to_abbrev)
+    datasrc[colchk] = datasrc[colchk].replace(state_to_abbrev)
     return
 
 def check_optional_col(colchk,colres,datasrc,datatemplate):
@@ -188,10 +187,12 @@ def whitespace_remover(dataframe):
 
 def zip_city(x):
     city = search.by_zipcode(x).major_city
+    print(city)
     return city if city else 'None'
 
 def zip_state(x):
     state = search.by_zipcode(x).state
+    print(state)
     return state if state else 'None'
 
 #def zip_check(colchk,colres,datasrc):

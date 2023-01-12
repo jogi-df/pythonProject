@@ -13,10 +13,10 @@ from uszipcode import SearchEngine, SimpleZipcode
 #df_zip = pd.read_excel(r'C:\test\ZIP_Locale_Detail.xls')
 
 # turn checks on or off
-change_perm_date = "off"
-phone_check = "off"
+#change_perm_date = "off"
 phone_remove_zeros = "off"
-city_check = "off"
+
+
 
 #sets the working folder
 working_folder = easygui.diropenbox(msg="Select the working folder", title="Working folder")
@@ -48,6 +48,11 @@ df.columns = df.columns.str.rstrip()
 
 if not 'Campaign ID' in df.columns:                                     #renames the column header if it is non standard
     x = [col for col in df.columns if "Campaign" in col]
+    y = x[0]
+    df.rename(columns={y:'Campaign ID'}, inplace=True)
+
+if not 'Campaign ID' in df.columns:                                     #renames the column header if it is non standard
+    x = [col for col in df.columns if "CID" in col]
     y = x[0]
     df.rename(columns={y:'Campaign ID'}, inplace=True)
 
@@ -84,6 +89,7 @@ if not 'Employee Range' in df.columns:
 
 #replace these values explicitly
 #fix est number of units if wrong values
+#df.loc[df['Estimated Number of Units'] == '1', 'Estimated Number of Units'] = '1'
 df.loc[df['Timeline for Purchasing'] == '1 to 3 months', 'Timeline for Purchasing'] = '1-3 months'
 df.loc[df['Timeline for Purchasing'] == '4 to 6 months', 'Timeline for Purchasing'] = '4-6 months'
 df.loc[df['Timeline for Purchasing'] == '7 to 9 months', 'Timeline for Purchasing'] = '7-9 months'
@@ -100,21 +106,6 @@ df['Employee Range'] = df['Employee Range'].str.replace(r"^ +| +$", r"", regex=T
 df['Email'] = df['Email'].str.replace(r"^ +| +$", r"", regex=True)
 
 
-#remove
-
-#fix states
-#df['State'] = df['State'].map(df_states.drop_duplicates().set_index('supplier_id')['retailer_id'])
-
-
-
-#df['Industry'].str.strip()
-
-#for col in df.columns:
-#    try:
-#        df[col] = df[col].str.strip()
-#    except AttributeError:
-#        pass
-
 
 #check CID length for 18 characters
 df.loc[df['Campaign ID'].apply(len) == 18, 'CID_status'] = 'TRUE'
@@ -129,23 +120,16 @@ if df['Permissions Create Date'].dtypes != 'object':
     df['Permissions Create Date'] = df['Permissions Create Date'].astype(str)
 
 #if df['Permissions Create Date'].len()  8:
-if change_perm_date == 'on':
+if df['Permissions Create Date'].str.contains("\/|-|\.").any():     #checks to see if non numberic characters exist in date (wrong format?)
     df["Permissions Create Date"] = pd.to_datetime(df["Permissions Create Date"]).dt.strftime("%m%d%Y")
 
-#if df.loc[df['Permissions Create Date'].len() > 10]
-#if df.loc[(df['Permissions Create Date'].str.match("\/"))]:
-#    print("date is in the wrong format")
-    #df["Permissions Create Date"] = pd.to_datetime(df["Permissions Create Date"]).dt.strftime("%m%d%Y")
-#else:
-#    print("date does not have slashes")
-df['Permissions Create Date'] = df['Permissions Create Date'].str.zfill(8)
+#if change_perm_date == 'on':
+#    df["Permissions Create Date"] = pd.to_datetime(df["Permissions Create Date"]).dt.strftime("%m%d%Y")
 
-df['perm'] = df["Permissions Create Date"].str.match("^[']?[0-1][0-9][0-3][0-9](202)[2-3]")
+df['Permissions Create Date'] = df['Permissions Create Date'].str.zfill(8)
+df['perm'] = df["Permissions Create Date"].str.match("^[']?[0-1][0-9][0-3][0-9](202)[2-3]") #checks date format
 
 #print(df['Permissions Create Date'].dtypes)
-
-
-
 
 
 check_optional_col('Attended','Attend',df,df_acceptable)
@@ -163,15 +147,26 @@ df['F Name'] = df['First Name'].str.match("^[_A-z|(-|'|á|á|ć|é|ñ|ó|è|Ô|�
 
 #check_exists('Last Name', 'L Name', df)
 df['Last Name'] = df['Last Name'].replace(r"^ +| +$", r"", regex=True)          #remove leading and trailing spaces
+df['Last Name'] = df['Last Name'].replace(r",\W*\b[A-Za-z].+\b(?!'\b)\.?", r"", regex=True)          #removes all the junk after last name
 df['Last Name'] = df['Last Name'].str.title()                                   #Capitalize first letter, lowercase rest
 df['L Name'] = df['Last Name'].str.match("^[_A-z|(-|'|á|ã|é|ñ|ó|è|ç|ć|Ô|í)?]*((\s)*[_A-z]|(-|é|ñ|ó|è|ç|Ô|í)?)*$")
 
 check_exists('Company Name', 'Comp Good', df)
 
-if city_check == "on":
+#if city_check == "on":
+if not df['City'].isna().all():     #checks to see if columns is empty
+    df['City'] = df['City'].str.replace(r"^ +| +$|,+$", r"", regex=True)    #removes leading trailing spaces and comma at the end
     df['City'] = df['City'].str.title()                                   #Capitalize first letter, lowercase rest
 
-state_check('State', df)
+# df['State'] = df['State'].replace(r"^([a-z])", '/\U/$1', regex=True)
+#df.loc[df['Campaign ID'].apply(len) == 18, 'CID_status'] = 'TRUE'
+#if df.loc[df['State'].str.len() > 2]:
+#    df['State'] = df['State'].str.title()
+
+if any(df['State'].apply(lambda x: len(str(x)) > 2)):    #if state is more than 2 char i.e. not abbreviated, capitalize first letters to normalize against map
+    df['State'] = df['State'].str.title()
+
+state_check('State', df)    #converts long state name to abbreviation
 check_required_col('State','State Good',df,df_states,'Abbreviation')
 
 
@@ -184,14 +179,15 @@ df['Zip Status'] = df['Zip'].str.match("^[']?[0-9]{5}(?:-[0-9]{4})?$|([ABCEGHJ-N
 
 
 # for zip/state checking
-
-#df['City Temp'] = df['Zip'].apply(zip_city)
-#df['State Temp'] = df['Zip'].apply(zip_state)
+search = SearchEngine()
+df['City Lookup'] = df['Zip'].apply(zip_city)
+df['State Lookup'] = df['Zip'].apply(zip_state)
 
 
 check_required_col('Country','Country Good',df,df_acceptable,'Country')
 
-if phone_check == 'on':
+
+if not df['Phone'].isna().all():        #check to see if column is empty, dont run the check
 #df['Ph status'] = pd.np.where(df.Phone.isnull(), "optional")
     if df['Phone'].dtypes != 'object':
         df['Phone'] = df['Phone'].astype(str)
